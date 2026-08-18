@@ -200,6 +200,8 @@ figure {
 }
 figure img {
   max-width: 100%;
+  width: 100%;
+  height: auto;
 }
 figcaption {
   font-size: 0.85rem;
@@ -210,12 +212,12 @@ figcaption {
 }
 figcaption b { color: var(--ink); }
 
-.figure-medium img { max-height: 640px; width: auto; }
+.figure-medium img { height: 760px; width: auto; max-width: 100%; }
 .figure-small img { max-height: 520px; width: auto; }
 
 .figure-wide {
-  width: 92vw;
-  max-width: 2800px;
+  width: 70vw;
+  max-width: 1300px;
   margin-left: 50%;
   transform: translateX(-50%);
 }
