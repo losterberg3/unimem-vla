@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>losterberg3.github.io/unimem-vla</title>
+<meta name="description" content="UniMem unifies multimodal memory and low-level control under a single VLA backbone for long-horizon, non-Markovian robot manipulation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container">
+    <div class="nav-title">Uni<span>Mem</span></div>
+    <ul class="nav-links">
+      <li><a href="#abstract">Abstract</a></li>
+      <li><a href="#method">Method</a></li>
+      <li><a href="#tasks">Tasks</a></li>
+      <li><a href="#hardware">Hardware</a></li>
+      <li><a href="#simulation">Simulation</a></li>
+      <li><a href="#latency">Latency</a></li>
+      <li><a href="#bibtex">BibTeX</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <h1><span class="brand">UniMem</span>: Unifying Multimodal Memory and Control for VLAs</h1>
+    <p class="authors">Lars Osterberg<sup>1</sup>, Maggie Wang<sup>1</sup>, Mac Schwager<sup>1</sup></p>
+    <p class="affil"><sup>1</sup>Stanford University, Stanford, CA, USA</p>
+    <div class="badge-row">
+      <span class="badge soon">📄 Paper (coming soon)</span>
+      <span class="badge soon">💻 Code (coming soon)</span>
+      <span class="badge soon">🎥 Videos (in progress)</span>
+      <a class="badge" href="#bibtex">🔖 BibTeX</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section id="abstract">
+    <div class="container">
+      <p class="section-label">Abstract</p>
+      <h2 class="section-title">Memory and control, one backbone</h2>
+      <div class="abstract-box">
+        While Vision-Language-Action (VLA) models have leveraged internet-scale pretraining and task-focused
+        finetuning to achieve impressive long-horizon goals, they often struggle with non-Markovian tasks that
+        require memory. Existing approaches to memory typically involve additional Vision-Language Models (VLMs)
+        for long-term memory management, introducing a memory bottleneck and a fractured training pipeline.
+        Conditioning on multiple historical frames can provide the VLA with access to more descriptive features
+        of past scenes, but can degrade performance if frames are chosen at arbitrary, fixed intervals. To address
+        this, we present <b>UniMem</b>, a framework that unifies high-level, multimodal memory and low-level
+        control under one backbone. UniMem employs an event classifier for memory updates, a keyframe encoder for
+        dense spatial memory, and a keyframe caching technique to minimize overhead during policy rollouts. We
+        evaluate UniMem across five simulation and four hardware tasks targeting sequential and spatial memory,
+        demonstrating that our unified, single-model system drastically outperforms fixed-interval image sampling
+        baselines (<b>93.4% vs. 68.2%</b>) in simulation and hierarchical baselines (<b>80.0% vs. 43.5%</b>) in
+        hardware, while offering faster inference and a simple training pipeline for easy adoption.
+      </div>
+
+      <h3 class="sub-title">Overview</h3>
+      <p class="lead">
+        State-of-the-art VLA policies act almost entirely on the current camera frame — they have no architectural
+        memory. That's fine for short, fully-observable tasks, but it breaks down the moment a task requires
+        knowing <i>what already happened</i>: state-of-the-art policies still fail at tasks as simple as picking
+        something up and putting it back where it was. Two moments in a task can look nearly identical while
+        demanding completely different actions depending on history — a failure mode the paper calls
+        <b>perceptual aliasing</b>. Prior fixes either bolt on a second, slower VLM to plan over history (a
+        hierarchical, decoupled pipeline) or feed the policy a fixed window of recent frames (which invites
+        spurious correlations and doesn't scale). UniMem instead adds a lightweight event classifier directly on
+        top of a VLA's own latent features. When it detects a task-critical milestone, it (1) appends a short
+        phrase to a running textual memory and (2) caches the current multi-view image as a keyframe — both fed
+        back into the <i>same</i> backbone that produces actions. Because keyframe hidden states are cached rather
+        than recomputed, this rich multimodal memory costs almost nothing at inference time.
+      </p>
+
+      <div class="tldr-grid">
+        <div class="tldr-card">
+          <span class="icon">🧭</span>
+          <h4>Event-Driven Memory</h4>
+          <p>A lightweight classifier head reads the VLA's own latent state to detect task milestones and
+          autoregressively updates a language prompt and keyframe cache — no separate memory module or transformer.</p>
+        </div>
+        <div class="tldr-card">
+          <span class="icon">🧩</span>
+          <h4>Multi-Modal Conditioning</h4>
+          <p>Textual memory anchors task progress; keyframe memory supplies fine-grained spatial detail. Ablations
+          show both are necessary and complementary — neither alone is enough.</p>
+        </div>
+        <div class="tldr-card">
+          <span class="icon">⚡</span>
+          <h4>Real-Time Keyframe Caching</h4>
+          <p>Keyframe hidden states are cached prior to temporal attention, giving ~90ms single-frame-like
+          latency and a 6× speedup over hierarchical memory baselines.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="method">
+    <div class="container">
+      <p class="section-label">Method</p>
+      <h2 class="section-title">How UniMem works</h2>
+
+      <figure class="figure-medium">
+        <img src="assets/img/model_overview.png" alt="UniMem model overview diagram">
+        <figcaption><b>Overview of UniMem.</b> (Top) An event classifier detects sparse sub-task transition events
+        from the backbone's latent representation, updating both textual memory and a keyframe cache. (Middle) A
+        keyframe encoder conditions on the autoregressively updated cache and the current image, while textual
+        descriptions of new events are appended to memory alongside the task prompt and proprioception — providing
+        multimodal memory directly to the backbone and action expert. (Bottom) Hidden states of past keyframes are
+        cached at temporal attention layers for fast inference; only positional embeddings need adjusting when a
+        new keyframe is added.</figcaption>
+      </figure>
+
+      <h3 class="sub-title">Event classification &amp; textual memory</h3>
+      <p>UniMem is built on top of <span class="mono">π<sub>0.5</sub></span>, an open-source VLA with a PaliGemma
+      backbone and a Gemma action expert. A lightweight MLP head is attached to the backbone's final-layer latent
+      representation and trained jointly with the policy to predict a task-relevant event (e.g. <span class="mono">"grabbed box"</span>)
+      or a null class at every step. Because this head shares gradients with the backbone, it doubles as auxiliary
+      supervision — pushing the model's features toward whatever is relevant for memory and action. Detected
+      events are appended in natural language to a running textual memory that conditions every subsequent step,
+      giving the policy an explicit, cheap signal of its own progress.</p>
+
+      <h3 class="sub-title">Keyframe encoder &amp; caching</h3>
+      <p>Text alone can't disambiguate everything — e.g. spatial questions like <i>which</i> cup or bin. So every
+      time the event classifier fires, UniMem also captures the current wrist and exterior images as a keyframe,
+      maintaining a small rolling bank (capped at 3–4 past milestones) rather than a fixed-stride sequence of
+      arbitrary frames. A modified SigLIP encoder interleaves causal temporal self-attention every 4 layers, and
+      once a keyframe's hidden state has propagated through, it's cached in raw form — so adding a new frame only
+      requires shifting positional embeddings, never recomputing spatial attention over the whole history. This
+      keeps inference near single-frame speed even as visual memory accumulates.</p>
+
+      <figure>
+        <img src="assets/img/method_labeling.png" alt="Automated data labeling pipeline diagram">
+        <figcaption><b>Automated data labeling.</b> An LLM agent (Claude Sonnet 5) is prompted to generate a script
+        that labels demonstrations with events and textual memory strings directly from action signatures (e.g. a
+        gripper closing means an object was grasped). A human spot-checks a subset of labeled rollouts and the
+        script is refined if needed — no manual frame-by-frame annotation required.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="tasks">
+    <div class="container">
+      <p class="section-label">Experiments</p>
+      <h2 class="section-title">Nine memory-critical tasks</h2>
+      <p class="lead">UniMem is evaluated on <b>five simulation tasks</b> (robosuite, 7-DoF Franka Panda) and
+      <b>four hardware tasks</b> (UFACTORY xArm6), each designed to require sequential and/or spatial memory that
+      a purely reactive policy cannot solve.</p>
+      <figure>
+        <img src="assets/img/tasks.png" alt="Overview of simulation and hardware tasks">
+        <figcaption><b>Overview of tasks.</b> (Top) Manipulation tasks in robosuite. (Bottom) Real-world tasks on
+        the xArm6 setup.</figcaption>
+      </figure>
+      <div class="legend">
+        <span><b>N.M.</b> — No Memory (vanilla π<sub>0.5</sub>)</span>
+        <span><b>T.O.</b> — Text-Only memory</span>
+        <span><b>K.O.</b> — Keyframe-Only memory</span>
+        <span><b>V.E.</b> — Video Encoder (fixed-interval frames)</span>
+        <span><b>MemER</b> — hierarchical VLM + VLA baseline</span>
+        <span><b>Ours</b> — full UniMem</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="hardware">
+    <div class="container">
+      <p class="section-label">Real-World Results</p>
+      <h2 class="section-title">Hardware tasks (xArm6)</h2>
+      <p>UniMem is benchmarked against <b>MemER</b> — a hierarchical VLM + <span class="mono">π<sub>0.5</sub></span>
+      system — as the primary hardware baseline, plus no-memory, text-only, and keyframe-only ablations. UniMem
+      reaches <b>80.0%</b> average success versus MemER's 43.5%, while conditioning the low-level policy on memory
+      directly at every control step rather than through an intermediate subtask command.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Task</th><th>MemER</th><th>N.M.</th><th>T.O.</th><th>K.O.</th><th>Ours</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>HammerMeasure</td><td class="best">87</td><td>13</td><td>53</td><td>53</td><td class="best">87</td></tr>
+            <tr><td>BeanScoop</td><td>67</td><td>0</td><td>27</td><td>20</td><td class="best">93</td></tr>
+            <tr><td>TableClean</td><td>13</td><td>0</td><td>0</td><td>47</td><td class="best">80</td></tr>
+            <tr><td>TapScoopPour</td><td>7</td><td>7</td><td>7</td><td>27</td><td class="best">60</td></tr>
+            <tr class="avg-row"><td>Hardware Average</td><td>43.5</td><td>5.0</td><td>21.8</td><td>36.8</td><td class="best">80.0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">Success rates (%), N=15 rollouts per task/condition.</p>
+
+      <!-- HammerMeasure -->
+      <div class="task-card" data-task="HammerMeasure">
+        <div class="task-card-head"><h4>HammerMeasure</h4></div>
+        <p class="task-prompt">"Slowly measure the width of the hammer using the tape measure, controlling the
+        retract to ensure the hook does not slip off the hammer."</p>
+        <div class="tab-row">
+          <button class="tab-btn" data-label="MemER">MemER <span class="rate">87%</span></button>
+          <button class="tab-btn" data-label="No Memory">No Memory <span class="rate">13%</span></button>
+          <button class="tab-btn" data-label="Text Only">Text Only <span class="rate">53%</span></button>
+          <button class="tab-btn" data-label="Keyframe Only">Keyframe Only <span class="rate">53%</span></button>
+          <button class="tab-btn active" data-label="UniMem (Ours)">UniMem (Ours) <span class="rate">87%</span></button>
+        </div>
+        <div class="video-slot">
+          <span class="vs-icon">🎬</span>
+          <span class="vs-title">HammerMeasure — UniMem (Ours)</span>
+          <span class="vs-sub">Video coming soon</span>
+        </div>
+        <p class="analysis"></p>
+      </div>
+
+      <!-- BeanScoop -->
+      <div class="task-card" data-task="BeanScoop">
+        <div class="task-card-head"><h4>BeanScoop</h4></div>
+        <p class="task-prompt">"Pick up the spoon, put three scoops of beans into the bowl, and then place the
+        spoon back."</p>
+        <div class="tab-row">
+          <button class="tab-btn" data-label="MemER">MemER <span class="rate">67%</span></button>
+          <button class="tab-btn" data-label="No Memory">No Memory <span class="rate">0%</span></button>
+          <button class="tab-btn" data-label="Text Only">Text Only <span class="rate">27%</span></button>
+          <button class="tab-btn" data-label="Keyframe Only">Keyframe Only <span class="rate">20%</span></button>
+          <button class="tab-btn active" data-label="UniMem (Ours)">UniMem (Ours) <span class="rate">93%</span></button>
+        </div>
+        <div class="video-slot">
+          <span class="vs-icon">🎬</span>
+          <span class="vs-title">BeanScoop — UniMem (Ours)</span>
+          <span class="vs-sub">Video coming soon</span>
+        </div>
+        <p class="analysis"></p>
+      </div>
+
+      <!-- TableClean -->
+      <div class="task-card" data-task="TableClean">
+        <div class="task-card-head"><h4>TableClean</h4></div>
+        <p class="task-prompt">"Pick and place the bottle off the 60cm × 80cm table, grab the sponge, wipe the
+        bottle's original location, and then place the sponge back."</p>
+        <div class="tab-row">
+          <button class="tab-btn" data-label="MemER">MemER <span class="rate">13%</span></button>
+          <button class="tab-btn" data-label="No Memory">No Memory <span class="rate">0%</span></button>
+          <button class="tab-btn" data-label="Text Only">Text Only <span class="rate">0%</span></button>
+          <button class="tab-btn" data-label="Keyframe Only">Keyframe Only <span class="rate">47%</span></button>
+          <button class="tab-btn active" data-label="UniMem (Ours)">UniMem (Ours) <span class="rate">80%</span></button>
+        </div>
+        <div class="video-slot">
+          <span class="vs-icon">🎬</span>
+          <span class="vs-title">TableClean — UniMem (Ours)</span>
+          <span class="vs-sub">Video coming soon</span>
+        </div>
+        <p class="analysis"></p>
+      </div>
+
+      <!-- TapScoopPour -->
+      <div class="task-card" data-task="TapScoopPour">
+        <div class="task-card-head"><h4>TapScoopPour</h4></div>
+        <p class="task-prompt">"Wait for a human to tap one of eight cups, grab the spoon, scoop the beans, pour
+        the beans into the tapped cup, and then place the spoon back."</p>
+        <div class="tab-row">
+          <button class="tab-btn" data-label="MemER">MemER <span class="rate">7%</span></button>
+          <button class="tab-btn" data-label="No Memory">No Memory <span class="rate">7%</span></button>
+          <button class="tab-btn" data-label="Text Only">Text Only <span class="rate">7%</span></button>
+          <button class="tab-btn" data-label="Keyframe Only">Keyframe Only <span class="rate">27%</span></button>
+          <button class="tab-btn active" data-label="UniMem (Ours)">UniMem (Ours) <span class="rate">60%</span></button>
+        </div>
+        <div class="video-slot">
+          <span class="vs-icon">🎬</span>
+          <span class="vs-title">TapScoopPour — UniMem (Ours)</span>
+          <span class="vs-sub">Video coming soon</span>
+        </div>
+        <p class="analysis"></p>
+      </div>
+
+      <figure class="figure-small">
+        <img src="assets/img/subtask_cumulative_breakdown.png" alt="Cumulative subtask success rate breakdown">
+        <figcaption><b>Cumulative success rates.</b> Stage-by-stage breakdown for BeanScoop, TableClean, and
+        TapScoopPour, showing where each ablation and baseline drops off within the task.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="simulation">
+    <div class="container">
+      <p class="section-label">Simulation Results</p>
+      <h2 class="section-title">Simulation tasks (robosuite)</h2>
+      <p>In simulation, UniMem is compared against <span class="mono">π<sub>0.5</sub></span> with a video-encoder
+      baseline (V.E.) that samples frames at fixed 6-second intervals using the same keyframe encoder architecture
+      — isolating whether arbitrary frame sampling introduces spurious correlations relative to event-driven
+      keyframes. UniMem reaches <b>93.4%</b> average success versus 68.2% for the fixed-interval baseline.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Task</th><th>π<sub>0.5</sub>+V.E.</th><th>N.M.</th><th>T.O.</th><th>K.O.</th><th>Ours</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>UpDown</td><td>84</td><td>52</td><td>96</td><td>92</td><td class="best">100</td></tr>
+            <tr><td>UpDown3Times&dagger;</td><td>16</td><td>22</td><td>93</td><td>23</td><td class="best">96</td></tr>
+            <tr><td>OccludedTap</td><td>96</td><td>60</td><td>88</td><td class="best">100</td><td>96</td></tr>
+            <tr><td>UpDownSpatial</td><td>49</td><td>6</td><td>30</td><td>52</td><td class="best">79</td></tr>
+            <tr><td>PlateRecall</td><td class="best">96</td><td>8</td><td>20</td><td class="best">96</td><td class="best">96</td></tr>
+            <tr class="avg-row"><td>Sim Average</td><td>68.2</td><td>29.6</td><td>65.4</td><td>72.6</td><td class="best">93.4</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">Success rates (%), N=25 rollouts per task/condition. (&dagger;) reports mean subtask success due to long-horizon complexity.</p>
+
+      <!-- UpDown -->
+      <div class="task-card" data-task="UpDown">
+        <div class="task-card-head"><h4>UpDown</h4></div>
+        <p class="task-prompt">"Pick up the box and then put it back down once."</p>
+        <div class="tab-row">
+          <button class="tab-btn" data-label="π0.5 + V.E.">π<sub>0.5</sub>+V.E. <span class="rate">84%</span></button>
+          <button class="tab-btn" data-label="No Memory">No Memory <span class="rate">52%</span></button>
+          <button class="tab-btn" data-label="Text Only">Text Only <span class="rate">96%</span></button>
+          <button class="tab-btn" data-label="Keyframe Only">Keyframe Only <span class="rate">92%</span></button>
+          <button class="tab-btn active" data-label="UniMem (Ours)">UniMem (Ours) <span class="rate">100%</span></button>
+        </div>
+        <div class="video-slot">
+          <span class="vs-icon">🎬</span>
+          <span class="vs-title">UpDown — UniMem (Ours)</span>
+          <span class="vs-sub">Video coming soon</span>
+        </div>
+        <p class="analysis"></p>
+      </div>
+
+      <!-- UpDown3Times -->
+      <div class="task-card" data-task="UpDown3Times">
+        <div class="task-card-head"><h4>UpDown3Times</h4></div>
+        <p class="task-prompt">"Pick up the box and then put it back down three times."</p>
+        <div class="tab-row">
+          <button class="tab-btn" data-label="π0.5 + V.E.">π<sub>0.5</sub>+V.E. <span class="rate">16%</span></button>
+          <button class="tab-btn" data-label="No Memory">No Memory <span class="rate">22%</span></button>
+          <button class="tab-btn" data-label="Text Only">Text Only <span class="rate">93%</span></button>
+          <button class="tab-btn" data-label="Keyframe Only">Keyframe Only <span class="rate">23%</span></button>
+          <button class="tab-btn active" data-label="UniMem (Ours)">UniMem (Ours) <span class="rate">96%</span></button>
+        </div>
+        <div class="video-slot">
+          <span class="vs-icon">🎬</span>
+          <span class="vs-title">UpDown3Times — UniMem (Ours)</span>
+          <span class="vs-sub">Video coming soon</span>
+        </div>
+        <p class="analysis"></p>
+      </div>
+
+      <!-- OccludedTap -->
+      <div class="task-card" data-task="OccludedTap">
+        <div class="task-card-head"><h4>OccludedTap</h4></div>
+        <p class="task-prompt">"Pick up the box, place it in a bin, retract so you can't see inside the bin, and
+        then decide which bin contains the box."</p>
+        <div class="tab-row">
+          <button class="tab-btn" data-label="π0.5 + V.E.">π<sub>0.5</sub>+V.E. <span class="rate">96%</span></button>
+          <button class="tab-btn" data-label="No Memory">No Memory <span class="rate">60%</span></button>
+          <button class="tab-btn" data-label="Text Only">Text Only <span class="rate">88%</span></button>
+          <button class="tab-btn" data-label="Keyframe Only">Keyframe Only <span class="rate">100%</span></button>
+          <button class="tab-btn active" data-label="UniMem (Ours)">UniMem (Ours) <span class="rate">96%</span></button>
+        </div>
+        <div class="video-slot">
+          <span class="vs-icon">🎬</span>
+          <span class="vs-title">OccludedTap — UniMem (Ours)</span>
+          <span class="vs-sub">Video coming soon</span>
+        </div>
+        <p class="analysis"></p>
+      </div>
+
+      <!-- UpDownSpatial -->
+      <div class="task-card" data-task="UpDownSpatial">
+        <div class="task-card-head"><h4>UpDownSpatial</h4></div>
+        <p class="task-prompt">"Pick up the box at various locations on a table, and then place it back in its
+        original location."</p>
+        <div class="tab-row">
+          <button class="tab-btn" data-label="π0.5 + V.E.">π<sub>0.5</sub>+V.E. <span class="rate">49%</span></button>
+          <button class="tab-btn" data-label="No Memory">No Memory <span class="rate">6%</span></button>
+          <button class="tab-btn" data-label="Text Only">Text Only <span class="rate">30%</span></button>
+          <button class="tab-btn" data-label="Keyframe Only">Keyframe Only <span class="rate">52%</span></button>
+          <button class="tab-btn active" data-label="UniMem (Ours)">UniMem (Ours) <span class="rate">79%</span></button>
+        </div>
+        <div class="video-slot">
+          <span class="vs-icon">🎬</span>
+          <span class="vs-title">UpDownSpatial — UniMem (Ours)</span>
+          <span class="vs-sub">Video coming soon</span>
+        </div>
+        <p class="analysis"></p>
+      </div>
+
+      <!-- PlateRecall -->
+      <div class="task-card" data-task="PlateRecall">
+        <div class="task-card-head"><h4>PlateRecall</h4></div>
+        <p class="task-prompt">"Pick up the box from one of 4 plates, place it to the side, and then tap which
+        plate originally had the box."</p>
+        <div class="tab-row">
+          <button class="tab-btn" data-label="π0.5 + V.E.">π<sub>0.5</sub>+V.E. <span class="rate">96%</span></button>
+          <button class="tab-btn" data-label="No Memory">No Memory <span class="rate">8%</span></button>
+          <button class="tab-btn" data-label="Text Only">Text Only <span class="rate">20%</span></button>
+          <button class="tab-btn" data-label="Keyframe Only">Keyframe Only <span class="rate">96%</span></button>
+          <button class="tab-btn active" data-label="UniMem (Ours)">UniMem (Ours) <span class="rate">96%</span></button>
+        </div>
+        <div class="video-slot">
+          <span class="vs-icon">🎬</span>
+          <span class="vs-title">PlateRecall — UniMem (Ours)</span>
+          <span class="vs-sub">Video coming soon</span>
+        </div>
+        <p class="analysis"></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="latency">
+    <div class="container">
+      <p class="section-label">Efficiency</p>
+      <h2 class="section-title">Real-time inference via keyframe caching</h2>
+      <p>By caching pre-computed keyframe hidden states prior to temporal self-attention, UniMem avoids re-encoding
+      the entire visual history at every control step. Benchmarked on an RTX 4090 against a no-caching ablation,
+      single-frame <span class="mono">π<sub>0.5</sub></span>, and MemER's dual-system architecture, maintaining a
+      16-keyframe memory context across four camera streams adds only <b>~25ms</b> of latency beyond the
+      single-frame, 2-camera base policy — keeping single-frame-like (<b>~90ms</b>) inference and a <b>6×</b>
+      speedup over hierarchical memory baselines.</p>
+      <div class="two-col-figs">
+        <figure>
+          <img src="assets/img/2cameras.png" alt="Latency benchmark, 2 camera streams">
+        </figure>
+        <figure>
+          <img src="assets/img/4cameras.png" alt="Latency benchmark, 4 camera streams">
+        </figure>
+      </div>
+      <figcaption>Inference latency vs. context window size on an RTX 4090, for 2 camera streams (left) and a
+      simulated bimanual setup with 4 camera streams (right).</figcaption>
+    </div>
+  </section>
+
+  <section id="conclusion">
+    <div class="container">
+      <p class="section-label">Discussion</p>
+      <h2 class="section-title">Conclusion &amp; limitations</h2>
+      <p>UniMem shows that long-horizon spatial and sequential memory can be unified within a single VLA backbone —
+      matching or beating hierarchical, decoupled memory systems while training with a single-stage pipeline and
+      running at near single-frame inference speed. Across nine tasks in simulation and hardware, this translates
+      to higher success rates, simpler training, and low-latency real-world rollouts.</p>
+      <ul class="limit-list">
+        <li><b>Horizon length.</b> UniMem has been validated over multi-minute rollouts, not yet over tasks spanning
+        tens of minutes or hours; memory editing mechanisms like pruning and consolidation are a promising next
+        step.</li>
+        <li><b>Offline labeling.</b> The keyframe/event extraction pipeline currently relies on automated offline
+        labeling scripts rather than a policy that autonomously decides what's worth remembering.</li>
+        <li><b>Single memory timescale.</b> UniMem maintains one temporal context spanning several minutes;
+        distinguishing short- from long-term memory — including memory that lives in the policy's weights, not
+        just its input stream — remains open.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="bibtex">
+    <div class="container">
+      <p class="section-label">Citation</p>
+      <h2 class="section-title">BibTeX</h2>
+      <div class="bibtex-box">
+        <button class="copy-btn">Copy</button>
+        <code>@misc{osterberg2026unimem,
+  title        = {UniMem: Unifying Multimodal Memory and Control for VLAs},
+  author       = {Osterberg, Lars and Wang, Maggie and Schwager, Mac},
+  year         = {2026},
+  institution  = {Stanford University},
+  note         = {Preprint}
+}</code>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="container">
+    <p>Lars Osterberg, Maggie Wang, Mac Schwager &middot; Stanford University, 2026</p>
+    <p>Site design adapted from common project-page conventions in robot learning research.</p>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>
