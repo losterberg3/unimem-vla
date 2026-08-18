@@ -108,7 +108,7 @@
       <h2 class="section-title">How UniMem works</h2>
 
       <figure class="figure-medium">
-        <img src="assets/img/model_overview.pdf" alt="UniMem model overview diagram">
+        <img src="assets/img/model_overview.svg" alt="UniMem model overview diagram">
         <figcaption><b>Overview of UniMem.</b> (Top) An event classifier detects sparse sub-task transition events
         from the backbone's latent representation, updating both textual memory and a keyframe cache. (Middle) A
         keyframe encoder conditions on the autoregressively updated cache and the current image, while textual
@@ -137,7 +137,7 @@
       keeps inference near single-frame speed even as visual memory accumulates.</p>
 
       <figure>
-        <img src="assets/img/method_labeling.png" alt="Automated data labeling pipeline diagram">
+        <img src="assets/img/method_labeling.svg" alt="Automated data labeling pipeline diagram">
         <figcaption><b>Automated data labeling.</b> An LLM agent (Claude Sonnet 5) is prompted to generate a script
         that labels demonstrations with events and textual memory strings directly from action signatures (e.g. a
         gripper closing means an object was grasped). A human spot-checks a subset of labeled rollouts and the
@@ -154,7 +154,7 @@
       <b>four hardware tasks</b> (UFACTORY xArm6), each designed to require sequential and/or spatial memory that
       a purely reactive policy cannot solve.</p>
       <figure>
-        <img src="assets/img/tasks.png" alt="Overview of simulation and hardware tasks">
+        <img src="assets/img/tasks.svg" alt="Overview of simulation and hardware tasks">
         <figcaption><b>Overview of tasks.</b> (Top) Manipulation tasks in robosuite. (Bottom) Real-world tasks on
         the xArm6 setup.</figcaption>
       </figure>

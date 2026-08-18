@@ -202,7 +202,6 @@ figure img {
   max-width: 100%;
   border-radius: var(--radius);
   border: 1px solid var(--line);
-  background: #fff;
 }
 figcaption {
   font-size: 0.85rem;
