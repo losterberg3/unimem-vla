@@ -126,7 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ];
 
     // permanently hidden - never revealed
-    [...tokenizerInputText, ...encoderInputText].forEach((el) => {
+    tokenizerInputText.forEach((el) => {
       el.style.opacity = "0";
     });
 
@@ -154,6 +154,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (bracketEl) {
       bracketEl.style.opacity = "0";
     }
+    encoderInputText.forEach((el) => {
+      el.style.opacity = "0";
+    });
     annotationGroup.forEach((el) => {
       el.style.transition = "opacity 0.4s ease";
       el.style.opacity = "0";
@@ -186,6 +189,10 @@ document.addEventListener("DOMContentLoaded", () => {
           videoSlot.style.opacity = "1";
         }
         hcacheCylinder.forEach((el) => {
+          el.style.transition = "opacity 2s ease";
+          el.style.opacity = "1";
+        });
+        encoderInputText.forEach((el) => {
           el.style.transition = "opacity 2s ease";
           el.style.opacity = "1";
         });
@@ -338,6 +345,10 @@ document.addEventListener("DOMContentLoaded", () => {
         bracketEl.style.transition = "none";
         bracketEl.style.opacity = "0";
       }
+      encoderInputText.forEach((el) => {
+        el.style.transition = "none";
+        el.style.opacity = "0";
+      });
       if (flowMatchingArrow) flowMatchingArrow.style.animation = "none";
       annotationGroup.forEach((el) => (el.style.opacity = "0"));
       if (nullEventEl) {
