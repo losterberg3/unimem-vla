@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const memoryEl = document.getElementById("diagram-memory-text");
   if (!host || !stage) return;
 
-  fetch("assets/img/model_overview_interactive.svg?v=3")
+  fetch("assets/img/model_overview_interactive.svg?v=4")
     .then((r) => r.text())
     .then((raw) => {
       const cleaned = raw
@@ -41,12 +41,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const bracketEl = byId("event-classifier-bracket");
     const bracket = bracketEl ? [bracketEl] : [];
     const flowArrow = byId("it-flow-arrow");
+    const fphiArrowEl = byId("fphi-arrow");
+    const fphiArrow = fphiArrowEl ? [fphiArrowEl] : [];
     const hcacheCylinder = byRole("hcache-cylinder");
     const slot1 = byId("hcache-slot-1");
     const slot2 = byId("hcache-slot-2");
     const slot3 = byId("hcache-slot-3");
     const ztLabel = byRole("ztlabel-connector");
     const keyframeEncoder = byRole("keyframe-encoder-box");
+
+    // bump font size on the labels called out as too small
+    Array.from(host.querySelectorAll('[data-font-boost="1"]')).forEach((el) => {
+      el.style.transformBox = "fill-box";
+      el.style.transformOrigin = "center";
+      el.style.transform = "scale(1.18)";
+    });
 
     const slotPositions = [slot1, slot2, slot3].filter(Boolean);
 
@@ -87,17 +96,24 @@ document.addEventListener("DOMContentLoaded", () => {
       el.style.opacity = "0";
     });
 
-    // initial state: screen starts empty, core boxes fade in once playback begins
-    coreBoxes.forEach((el) => {
-      el.style.transition = "opacity 0.6s ease";
+    // the intro group: nothing for 1s, then these fade in over 2s and stay
+    // visible for the rest of the loop
+    const introGroup = [...coreBoxes, eventClassifierBox, ...fphiArrow, ...ztLabel].filter(
+      Boolean
+    );
+    introGroup.forEach((el) => {
+      el.style.transition = "opacity 2s ease";
       el.style.opacity = "0";
     });
-    [eventClassifierBox, dashedBorder, ...annotationGroup, ...ztLabel]
-      .filter(Boolean)
-      .forEach((el) => {
-        el.style.transition = "opacity 0.4s ease";
-        el.style.opacity = "0";
-      });
+    if (video) {
+      video.style.transition = "opacity 2s ease";
+      video.style.opacity = "0";
+    }
+
+    [dashedBorder, ...annotationGroup].filter(Boolean).forEach((el) => {
+      el.style.transition = "opacity 0.4s ease";
+      el.style.opacity = "0";
+    });
     slotPositions.forEach((el) => {
       el.style.transition = "transform 0.45s ease, opacity 0.45s ease";
       el.style.opacity = "0";
@@ -107,8 +123,11 @@ document.addEventListener("DOMContentLoaded", () => {
       el.style.opacity = "0.22";
     });
 
-    function revealCoreBoxes() {
-      coreBoxes.forEach((el) => (el.style.opacity = "1"));
+    function playIntro() {
+      setTimeout(() => {
+        introGroup.forEach((el) => (el.style.opacity = "1"));
+        if (video) video.style.opacity = "1";
+      }, 1000);
     }
 
     const EVENTS = [
@@ -244,13 +263,12 @@ document.addEventListener("DOMContentLoaded", () => {
       history = [];
       queue = [];
       setMemory("History: none");
-      coreBoxes.forEach((el) => (el.style.opacity = "0"));
-      [eventClassifierBox, dashedBorder, ...annotationGroup, ...ztLabel]
-        .filter(Boolean)
-        .forEach((el) => (el.style.opacity = "0"));
+      introGroup.forEach((el) => (el.style.opacity = "0"));
+      if (video) video.style.opacity = "0";
+      [dashedBorder, ...annotationGroup].filter(Boolean).forEach((el) => (el.style.opacity = "0"));
       renderQueue(false);
       hcacheCylinder.forEach((el) => (el.style.opacity = "0.22"));
-      setTimeout(revealCoreBoxes, 300);
+      playIntro();
     }
 
     function fireEvent(ev) {
@@ -259,9 +277,7 @@ document.addEventListener("DOMContentLoaded", () => {
       history.push(ev.label);
       setMemory("History: " + history.join(", "));
 
-      eventClassifierBox.style.opacity = "1";
       dashedBorder.style.opacity = "1";
-      ztLabel.forEach((el) => (el.style.opacity = "1"));
       hcacheCylinder.forEach((el) => (el.style.opacity = "1"));
 
       blinkAnnotationThenHide();
@@ -284,17 +300,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // fallback in case autoplay is blocked and "play" never fires
-    setTimeout(revealCoreBoxes, 1200);
+    playIntro();
 
     if (video) {
-      video.addEventListener(
-        "play",
-        () => {
-          setTimeout(revealCoreBoxes, 300);
-        },
-        { once: true }
-      );
       video.addEventListener("timeupdate", () => {
         const t = video.currentTime;
         if (t < 0.5 && fired > 0) resetDiagram();
