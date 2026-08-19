@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const host = document.getElementById("diagram-svg-host");
   const stage = document.getElementById("diagram-stage");
   const video = document.getElementById("diagram-video");
+  const videoSlot = document.getElementById("diagram-video-slot");
   const memoryEl = document.getElementById("diagram-memory-text");
   if (!host || !stage) return;
 
@@ -49,11 +50,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const slot3 = byId("hcache-slot-3");
     const ztLabel = byRole("ztlabel-connector");
     const keyframeEncoder = byRole("keyframe-encoder-box");
+    const currentImageBox = byRole("current-image-box");
 
-    // bump font size on the labels called out as too small
+    // baked-in photos the video now covers - never shown
+    currentImageBox.forEach((el) => {
+      el.style.opacity = "0";
+    });
+
+    // bump font size on the labels called out as too small, scaling from
+    // each element's own measured center (transform-box:fill-box was
+    // unreliable on these foreignObject-based text nodes)
     Array.from(host.querySelectorAll('[data-font-boost="1"]')).forEach((el) => {
-      el.style.transformBox = "fill-box";
-      el.style.transformOrigin = "center";
+      if (!el.getBBox) return;
+      const b = el.getBBox();
+      const cx = b.x + b.width / 2;
+      const cy = b.y + b.height / 2;
+      el.style.transformOrigin = cx + "px " + cy + "px";
       el.style.transform = "scale(1.18)";
     });
 
@@ -105,9 +117,9 @@ document.addEventListener("DOMContentLoaded", () => {
       el.style.transition = "opacity 2s ease";
       el.style.opacity = "0";
     });
-    if (video) {
-      video.style.transition = "opacity 2s ease";
-      video.style.opacity = "0";
+    if (videoSlot) {
+      videoSlot.style.transition = "opacity 2s ease";
+      videoSlot.style.opacity = "0";
     }
 
     [dashedBorder, ...annotationGroup].filter(Boolean).forEach((el) => {
@@ -126,7 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function playIntro() {
       setTimeout(() => {
         introGroup.forEach((el) => (el.style.opacity = "1"));
-        if (video) video.style.opacity = "1";
+        if (videoSlot) videoSlot.style.opacity = "1";
       }, 1000);
     }
 
@@ -264,7 +276,7 @@ document.addEventListener("DOMContentLoaded", () => {
       queue = [];
       setMemory("History: none");
       introGroup.forEach((el) => (el.style.opacity = "0"));
-      if (video) video.style.opacity = "0";
+      if (videoSlot) videoSlot.style.opacity = "0";
       [dashedBorder, ...annotationGroup].filter(Boolean).forEach((el) => (el.style.opacity = "0"));
       renderQueue(false);
       hcacheCylinder.forEach((el) => (el.style.opacity = "0.22"));
