@@ -113,7 +113,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // immediately with no fade and never hidden, unlike everything below.
 
     // everything else starts hidden; only the video gets a timed fade-in,
-    // the rest is revealed later by actual events
+    // the rest is revealed later by actual events - which are keyed to the
+    // video's own currentTime, so the video must stay paused at 0 until it
+    // is actually visible, or those events fire while it's invisible
+    if (video) {
+      video.pause();
+      video.currentTime = 0;
+    }
     if (videoSlot) {
       videoSlot.style.transition = "opacity 2s ease";
       videoSlot.style.opacity = "0";
@@ -135,6 +141,12 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => {
         if (videoSlot) videoSlot.style.opacity = "1";
       }, 4000);
+      setTimeout(() => {
+        if (video) {
+          video.currentTime = 0;
+          video.play();
+        }
+      }, 6000);
     }
 
     const EVENTS = [
@@ -270,6 +282,10 @@ document.addEventListener("DOMContentLoaded", () => {
       history = [];
       queue = [];
       setMemory("History: none");
+      if (video) {
+        video.pause();
+        video.currentTime = 0;
+      }
       if (videoSlot) videoSlot.style.opacity = "0";
       [dashedBorder, ...annotationGroup].filter(Boolean).forEach((el) => (el.style.opacity = "0"));
       renderQueue(false);
