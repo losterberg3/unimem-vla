@@ -58,10 +58,9 @@ code, .mono {
 .nav-title {
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: var(--ink);
+  color: var(--cardinal);
   font-size: 1.05rem;
 }
-.nav-title span { color: var(--cardinal); }
 .nav-links {
   display: flex;
   gap: 22px;
