@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const memoryEl = document.getElementById("diagram-memory-text");
   if (!host || !stage) return;
 
-  fetch("assets/img/model_overview_interactive.svg?v=2")
+  fetch("assets/img/model_overview_interactive.svg?v=3")
     .then((r) => r.text())
     .then((raw) => {
       const cleaned = raw
@@ -26,6 +26,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const byRole = (role) =>
       Array.from(host.querySelectorAll('[data-role="' + role + '"]'));
 
+    const coreBoxes = [
+      ...byRole("gemma-backbone-box"),
+      ...byRole("action-expert-box"),
+      ...byRole("tokenizer-box"),
+      ...byRole("keyframe-encoder-box"),
+    ];
+    const tokenizerInputText = byRole("tokenizer-input-text");
+    const encoderInputText = byRole("encoder-input-text");
+
     const eventClassifierBox = byId("event-classifier-box");
     const dashedBorder = byId("event-classifier-dashed-border");
     const annotation = byRole("event-classifier-annotation");
@@ -40,7 +49,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const keyframeEncoder = byRole("keyframe-encoder-box");
 
     const slotPositions = [slot1, slot2, slot3].filter(Boolean);
-    const SLOT_SPACING = 63;
+
+    let SLOT_SPACING = 63;
+    if (slot1 && slot2 && slot1.getBBox && slot2.getBBox) {
+      try {
+        const b1 = slot1.getBBox();
+        const b2 = slot2.getBBox();
+        const measured = Math.abs(b2.x - b1.x);
+        if (measured > 5) SLOT_SPACING = measured;
+      } catch (e) {
+        /* fall back to default spacing */
+      }
+    }
 
     const getImageEl = (el) =>
       !el ? null : el.matches("image") ? el : el.querySelector("image");
@@ -62,7 +82,16 @@ document.addEventListener("DOMContentLoaded", () => {
       ...(flowArrow ? [flowArrow] : []),
     ];
 
-    // initial state: only the four core boxes are visible by default
+    // permanently hidden - never revealed
+    [...tokenizerInputText, ...encoderInputText].forEach((el) => {
+      el.style.opacity = "0";
+    });
+
+    // initial state: screen starts empty, core boxes fade in once playback begins
+    coreBoxes.forEach((el) => {
+      el.style.transition = "opacity 0.6s ease";
+      el.style.opacity = "0";
+    });
     [eventClassifierBox, dashedBorder, ...annotationGroup, ...ztLabel]
       .filter(Boolean)
       .forEach((el) => {
@@ -77,6 +106,10 @@ document.addEventListener("DOMContentLoaded", () => {
       el.style.transition = "opacity 0.6s ease";
       el.style.opacity = "0.22";
     });
+
+    function revealCoreBoxes() {
+      coreBoxes.forEach((el) => (el.style.opacity = "1"));
+    }
 
     const EVENTS = [
       { t: 1.72, label: "human tap", href: HUMAN_TAP_HREF },
@@ -211,11 +244,13 @@ document.addEventListener("DOMContentLoaded", () => {
       history = [];
       queue = [];
       setMemory("History: none");
+      coreBoxes.forEach((el) => (el.style.opacity = "0"));
       [eventClassifierBox, dashedBorder, ...annotationGroup, ...ztLabel]
         .filter(Boolean)
         .forEach((el) => (el.style.opacity = "0"));
       renderQueue(false);
       hcacheCylinder.forEach((el) => (el.style.opacity = "0.22"));
+      setTimeout(revealCoreBoxes, 300);
     }
 
     function fireEvent(ev) {
@@ -249,7 +284,17 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // fallback in case autoplay is blocked and "play" never fires
+    setTimeout(revealCoreBoxes, 1200);
+
     if (video) {
+      video.addEventListener(
+        "play",
+        () => {
+          setTimeout(revealCoreBoxes, 300);
+        },
+        { once: true }
+      );
       video.addEventListener("timeupdate", () => {
         const t = video.currentTime;
         if (t < 0.5 && fired > 0) resetDiagram();
