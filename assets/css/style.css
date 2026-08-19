@@ -267,7 +267,7 @@ h3.sub-title + figure { margin-top: -12px; }
 }
 
 @keyframes unimem-flow-dash {
-  to { stroke-dashoffset: -14.4; }
+  to { stroke-dashoffset: -18; }
 }
 
 .figure-wide {
