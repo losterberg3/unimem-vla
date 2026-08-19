@@ -40,7 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const eventClassifierPhoto = byId("event-classifier-photo");
     const annotation = byRole("event-classifier-annotation");
     const bracketEl = byId("event-classifier-bracket");
-    const bracket = bracketEl ? [bracketEl] : [];
     const flowArrow = byId("it-flow-arrow");
     const fphiArrowEl = byId("fphi-arrow");
     const fphiArrow = fphiArrowEl ? [fphiArrowEl] : [];
@@ -124,7 +123,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const annotationGroup = [
       ...annotation,
-      ...bracket,
       ...(flowArrow ? [flowArrow] : []),
     ];
 
@@ -153,6 +151,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (actionExpertToVideoArrow) {
       actionExpertToVideoArrow.style.opacity = "0";
+    }
+    if (bracketEl) {
+      bracketEl.style.opacity = "0";
     }
     annotationGroup.forEach((el) => {
       el.style.transition = "opacity 0.4s ease";
@@ -200,6 +201,10 @@ document.addEventListener("DOMContentLoaded", () => {
           actionExpertToVideoArrow.style.opacity = "1";
           actionExpertToVideoArrow.style.animation =
             "unimem-squish 1.2s ease-in-out infinite";
+        }
+        if (bracketEl) {
+          bracketEl.style.transition = "opacity 0.4s ease";
+          bracketEl.style.opacity = "1";
         }
         if (flowMatchingArrow) {
           flowMatchingArrow.style.animation = "unimem-flow-dash 0.5s linear infinite";
@@ -359,6 +364,10 @@ document.addEventListener("DOMContentLoaded", () => {
         actionExpertToVideoArrow.style.transition = "none";
         actionExpertToVideoArrow.style.opacity = "0";
         actionExpertToVideoArrow.style.animation = "none";
+      }
+      if (bracketEl) {
+        bracketEl.style.transition = "none";
+        bracketEl.style.opacity = "0";
       }
       if (flowMatchingArrow) flowMatchingArrow.style.animation = "none";
       annotationGroup.forEach((el) => (el.style.opacity = "0"));
