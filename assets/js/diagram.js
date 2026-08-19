@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const memoryEl = document.getElementById("diagram-memory-text");
   if (!host || !stage) return;
 
-  fetch("assets/img/model_overview_interactive.svg?v=6")
+  fetch("assets/img/model_overview_interactive.svg?v=7")
     .then((r) => r.text())
     .then((raw) => {
       const cleaned = raw
@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const encoderInputText = byRole("encoder-input-text");
 
     const eventClassifierBox = byId("event-classifier-box");
-    const dashedBorder = byId("event-classifier-dashed-border");
+    const eventClassifierPhoto = byId("event-classifier-photo");
     const annotation = byRole("event-classifier-annotation");
     const bracketEl = byId("event-classifier-bracket");
     const bracket = bracketEl ? [bracketEl] : [];
@@ -104,7 +104,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const HUMAN_TAP_HREF = bakedHref(slot1);
     const GRABBED_SPOON_HREF = bakedHref(slot2);
     const SCOOPED_BEANS_HREF = bakedHref(slot3);
-    const POURED_BEANS_HREF = "assets/img/poured_beans_keyframe.png";
+    // reuse the color-edited photo already baked in behind the video, rather
+    // than a separately-copied, uncorrected file
+    const POURED_BEANS_HREF =
+      bakedHref(currentImageBox[currentImageBox.length - 1]) ||
+      "assets/img/poured_beans_keyframe.png";
 
     const annotationGroup = [
       ...annotation,
@@ -138,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (actionExpertToVideoArrow) {
       actionExpertToVideoArrow.style.opacity = "0";
     }
-    [dashedBorder, ...annotationGroup].filter(Boolean).forEach((el) => {
+    annotationGroup.forEach((el) => {
       el.style.transition = "opacity 0.4s ease";
       el.style.opacity = "0";
     });
@@ -338,7 +342,7 @@ document.addEventListener("DOMContentLoaded", () => {
         actionExpertToVideoArrow.style.animation = "none";
       }
       if (flowMatchingArrow) flowMatchingArrow.style.animation = "none";
-      [dashedBorder, ...annotationGroup].filter(Boolean).forEach((el) => (el.style.opacity = "0"));
+      annotationGroup.forEach((el) => (el.style.opacity = "0"));
       renderQueue(false);
       hcacheCylinder.forEach((el) => {
         el.style.transition = "none";
@@ -353,7 +357,13 @@ document.addEventListener("DOMContentLoaded", () => {
       history.push(ev.label);
       setMemory("History: " + history.join(", "));
 
-      dashedBorder.style.opacity = "1";
+      if (ev.href) {
+        const photoImg = getImageEl(eventClassifierPhoto);
+        if (photoImg) {
+          photoImg.setAttribute("xlink:href", ev.href);
+          photoImg.setAttribute("href", ev.href);
+        }
+      }
 
       blinkAnnotationThenHide();
       flowArrowFor(3000);
