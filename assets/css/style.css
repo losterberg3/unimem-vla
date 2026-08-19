@@ -419,6 +419,36 @@ td.best { color: var(--cardinal); font-weight: 800; }
 }
 .video-slot .vs-icon { font-size: 1.6rem; opacity: 0.6; }
 
+.video-slot.has-video {
+  display: block;
+  aspect-ratio: auto;
+  border: 1px solid var(--line);
+  background: #0b0b0c;
+  padding: 0;
+  overflow: hidden;
+}
+.video-slot .vs-caption {
+  padding: 9px 14px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+.video-slot .vs-videos {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #0b0b0c;
+}
+.video-slot .vs-video-item {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: #000;
+}
+
 .analysis {
   margin-top: 14px;
   font-size: 0.87rem;

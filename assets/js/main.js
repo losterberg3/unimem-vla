@@ -74,8 +74,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const applyState = (btn) => {
       const condLabel = btn.dataset.label || btn.textContent.trim();
+      const videoAttr = btn.dataset.video;
       if (slot) {
-        slot.querySelector(".vs-title").textContent = `${taskName} — ${condLabel}`;
+        if (videoAttr) {
+          const paths = videoAttr.split(",").map((p) => p.trim()).filter(Boolean);
+          slot.classList.add("has-video");
+          slot.innerHTML =
+            `<div class="vs-caption">${taskName} — ${condLabel}</div>` +
+            `<div class="vs-videos${paths.length > 1 ? " vs-videos-multi" : ""}">` +
+            paths
+              .map(
+                (p) =>
+                  `<video class="vs-video-item" src="${p}" autoplay muted loop playsinline controls></video>`
+              )
+              .join("") +
+            `</div>`;
+        } else {
+          slot.classList.remove("has-video");
+          slot.innerHTML =
+            `<span class="vs-icon">🎬</span>` +
+            `<span class="vs-title">${taskName} — ${condLabel}</span>` +
+            `<span class="vs-sub">Video coming soon</span>`;
+        }
       }
       if (analysis && captions[condLabel]) {
         analysis.textContent = captions[condLabel];
