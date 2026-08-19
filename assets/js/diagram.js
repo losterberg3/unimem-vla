@@ -104,11 +104,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const HUMAN_TAP_HREF = bakedHref(slot1);
     const GRABBED_SPOON_HREF = bakedHref(slot2);
     const SCOOPED_BEANS_HREF = bakedHref(slot3);
-    // reuse the color-edited photo already baked in behind the video, rather
-    // than a separately-copied, uncorrected file
+    // the original annotation photo (before fireEvent starts overwriting it
+    // per-event) is actually the color-edited "poured beans" photo - reuse
+    // it rather than a separately-copied, uncorrected file
     const POURED_BEANS_HREF =
-      bakedHref(currentImageBox[currentImageBox.length - 1]) ||
-      "assets/img/poured_beans_keyframe.png";
+      bakedHref(eventClassifierPhoto) || "assets/img/poured_beans_keyframe.png";
 
     const annotationGroup = [
       ...annotation,
