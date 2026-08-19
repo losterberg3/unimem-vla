@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const memoryEl = document.getElementById("diagram-memory-text");
   if (!host || !stage) return;
 
-  fetch("assets/img/model_overview_interactive.svg?v=14")
+  fetch("assets/img/model_overview_interactive.svg?v=15")
     .then((r) => r.text())
     .then((raw) => {
       const cleaned = raw
