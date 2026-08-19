@@ -265,6 +265,10 @@ h3.sub-title + figure { margin-top: -12px; }
   color: var(--ink);
 }
 
+@keyframes unimem-flow-dash {
+  to { stroke-dashoffset: -14.4; }
+}
+
 .figure-wide {
   width: 70vw;
   max-width: 1300px;
