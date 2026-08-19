@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const memoryEl = document.getElementById("diagram-memory-text");
   if (!host || !stage) return;
 
-  fetch("assets/img/model_overview_interactive.svg?v=8")
+  fetch("assets/img/model_overview_interactive.svg?v=9")
     .then((r) => r.text())
     .then((raw) => {
       const cleaned = raw
@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const cx = b.x + b.width / 2;
       const cy = b.y + b.height / 2;
       el.style.transformOrigin = cx + "px " + cy + "px";
-      el.style.transform = "scale(1.18)";
+      el.style.transform = "scale(1.5)";
     });
 
     const slotPositions = [slot1, slot2, slot3].filter(Boolean);
