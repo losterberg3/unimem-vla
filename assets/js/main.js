@@ -64,6 +64,9 @@ const CAPTIONS = {
   },
 };
 
+const SIM_TASKS = ["UpDown", "UpDown3Times", "OccludedTap", "UpDownSpatial", "PlateRecall"];
+const SIM_VIDEO_ASPECT = "224 / 288"; // native resolution of the simulation-render clips
+
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".task-card").forEach((card) => {
     const buttons = card.querySelectorAll(".tab-btn");
@@ -71,6 +74,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const analysis = card.querySelector(".analysis");
     const taskName = card.dataset.task || "";
     const captions = CAPTIONS[taskName] || {};
+    const isSim = SIM_TASKS.includes(taskName);
+    const videoClass = isSim ? "vs-video-item vs-video-sim" : "vs-video-item";
+    const aspectStyle = isSim ? ` style="aspect-ratio:${SIM_VIDEO_ASPECT}"` : "";
 
     const applyState = (btn) => {
       const condLabel = btn.dataset.label || btn.textContent.trim();
@@ -85,7 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
             paths
               .map(
                 (p) =>
-                  `<video class="vs-video-item" src="${p}" autoplay muted loop playsinline controls></video>`
+                  `<video class="${videoClass}" src="${p}" autoplay muted loop playsinline controls${aspectStyle}></video>`
               )
               .join("") +
             `</div>`;
