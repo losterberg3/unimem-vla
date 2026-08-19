@@ -108,7 +108,7 @@
       <h2 class="section-title">How UniMem works</h2>
 
       <figure class="figure-medium">
-        <img src="assets/img/model_overview.svg" alt="UniMem model overview diagram">
+        <img src="assets/img/model_overview.svg?v=2" alt="UniMem model overview diagram">
         <figcaption><b>Overview of UniMem.</b> (Top) An event classifier detects sparse sub-task transition events
         from the backbone's latent representation, updating both textual memory and a keyframe cache. (Middle) A
         keyframe encoder conditions on the autoregressively updated cache and the current image, while textual
@@ -137,7 +137,7 @@
       keeps inference near single-frame speed even as visual memory accumulates.</p>
 
       <figure>
-        <img src="assets/img/method_labeling.svg" alt="Automated data labeling pipeline diagram">
+        <img src="assets/img/method_labeling.svg?v=2" alt="Automated data labeling pipeline diagram">
         <figcaption><b>Automated data labeling.</b> An LLM agent (Claude Sonnet 5) is prompted to generate a script
         that labels demonstrations with events and textual memory strings directly from action signatures (e.g. a
         gripper closing means an object was grasped). A human spot-checks a subset of labeled rollouts and the
@@ -158,14 +158,6 @@
         <figcaption><b>Overview of tasks.</b> (Top) Manipulation tasks in robosuite. (Bottom) Real-world tasks on
         the xArm6 setup.</figcaption>
       </figure>
-      <div class="legend">
-        <span><b>N.M.</b> — No Memory (vanilla π<sub>0.5</sub>)</span>
-        <span><b>T.O.</b> — Text-Only memory</span>
-        <span><b>K.O.</b> — Keyframe-Only memory</span>
-        <span><b>V.E.</b> — Video Encoder (fixed-interval frames)</span>
-        <span><b>MemER</b> — hierarchical VLM + VLA baseline</span>
-        <span><b>Ours</b> — full UniMem</span>
-      </div>
     </div>
   </section>
 
@@ -193,6 +185,13 @@
         </table>
       </div>
       <p class="table-note">Success rates (%), N=15 rollouts per task/condition.</p>
+      <div class="legend">
+        <span><b>MemER</b> — hierarchical VLM + VLA baseline</span>
+        <span><b>N.M.</b> — No Memory (vanilla π<sub>0.5</sub>)</span>
+        <span><b>T.O.</b> — Text-Only memory</span>
+        <span><b>K.O.</b> — Keyframe-Only memory</span>
+        <span><b>Ours</b> — full UniMem</span>
+      </div>
 
       <!-- HammerMeasure -->
       <div class="task-card" data-task="HammerMeasure">
@@ -275,7 +274,7 @@
       </div>
 
       <figure class="figure-small">
-        <img src="assets/img/subtask_cumulative_breakdown.png" alt="Cumulative subtask success rate breakdown">
+        <img src="assets/img/subtask_cumulative_breakdown.png?v=2" alt="Cumulative subtask success rate breakdown">
         <figcaption><b>Cumulative success rates.</b> Stage-by-stage breakdown for BeanScoop, TableClean, and
         TapScoopPour, showing where each ablation and baseline drops off within the task.</figcaption>
       </figure>
@@ -307,6 +306,13 @@
         </table>
       </div>
       <p class="table-note">Success rates (%), N=25 rollouts per task/condition. (&dagger;) reports mean subtask success due to long-horizon complexity.</p>
+      <div class="legend">
+        <span><b>V.E.</b> — Video Encoder (fixed-interval frames)</span>
+        <span><b>N.M.</b> — No Memory (vanilla π<sub>0.5</sub>)</span>
+        <span><b>T.O.</b> — Text-Only memory</span>
+        <span><b>K.O.</b> — Keyframe-Only memory</span>
+        <span><b>Ours</b> — full UniMem</span>
+      </div>
 
       <!-- UpDown -->
       <div class="task-card" data-task="UpDown">
