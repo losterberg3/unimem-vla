@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const memoryEl = document.getElementById("diagram-memory-text");
   if (!host || !stage) return;
 
-  fetch("assets/img/model_overview_interactive.svg?v=4")
+  fetch("assets/img/model_overview_interactive.svg?v=5")
     .then((r) => r.text())
     .then((raw) => {
       const cleaned = raw
@@ -51,6 +51,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const ztLabel = byRole("ztlabel-connector");
     const keyframeEncoder = byRole("keyframe-encoder-box");
     const currentImageBox = byRole("current-image-box");
+    const actionExpertToVideoArrow = byId("action-expert-to-video-arrow");
+    const flowMatchingArrow = byId("flow-matching-arrow");
 
     // baked-in photos the video now covers - never shown
     currentImageBox.forEach((el) => {
@@ -109,8 +111,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Gemma Backbone, Action Expert, Tokenizer, Keyframe Encoder, f_phi,
-    // the arrow into f_phi, and z_t are left untouched here - visible
-    // immediately with no fade and never hidden, unlike everything below.
+    // the arrow into f_phi, z_t, and the flow-matching loop arrow around
+    // Action Expert are left untouched here - visible immediately with no
+    // fade and never hidden, unlike everything below. The flow-matching
+    // arrow is stationary until the video starts, then animates forever.
 
     // everything else starts hidden; only the video gets a timed fade-in,
     // the rest is revealed later by actual events - which are keyed to the
@@ -121,8 +125,11 @@ document.addEventListener("DOMContentLoaded", () => {
       video.currentTime = 0;
     }
     if (videoSlot) {
-      videoSlot.style.transition = "opacity 2s ease";
+      videoSlot.style.transition = "none";
       videoSlot.style.opacity = "0";
+    }
+    if (actionExpertToVideoArrow) {
+      actionExpertToVideoArrow.style.opacity = "0";
     }
     [dashedBorder, ...annotationGroup].filter(Boolean).forEach((el) => {
       el.style.transition = "opacity 0.4s ease";
@@ -139,12 +146,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function playIntro() {
       setTimeout(() => {
-        if (videoSlot) videoSlot.style.opacity = "1";
+        if (videoSlot) {
+          videoSlot.style.transition = "opacity 2s ease";
+          videoSlot.style.opacity = "1";
+        }
       }, 4000);
       setTimeout(() => {
         if (video) {
           video.currentTime = 0;
           video.play();
+        }
+        if (actionExpertToVideoArrow) {
+          actionExpertToVideoArrow.style.transition = "opacity 0.4s ease";
+          actionExpertToVideoArrow.style.opacity = "1";
+        }
+        if (flowMatchingArrow) {
+          flowMatchingArrow.style.animation = "unimem-flow-dash 0.5s linear infinite";
         }
       }, 6000);
     }
@@ -286,7 +303,15 @@ document.addEventListener("DOMContentLoaded", () => {
         video.pause();
         video.currentTime = 0;
       }
-      if (videoSlot) videoSlot.style.opacity = "0";
+      if (videoSlot) {
+        videoSlot.style.transition = "none";
+        videoSlot.style.opacity = "0";
+      }
+      if (actionExpertToVideoArrow) {
+        actionExpertToVideoArrow.style.transition = "none";
+        actionExpertToVideoArrow.style.opacity = "0";
+      }
+      if (flowMatchingArrow) flowMatchingArrow.style.animation = "none";
       [dashedBorder, ...annotationGroup].filter(Boolean).forEach((el) => (el.style.opacity = "0"));
       renderQueue(false);
       hcacheCylinder.forEach((el) => (el.style.opacity = "0.22"));

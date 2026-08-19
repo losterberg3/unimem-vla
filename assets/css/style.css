@@ -245,6 +245,7 @@ h3.sub-title + figure { margin-top: -12px; }
   overflow: hidden;
   background: #14181c;
   box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  opacity: 0;
 }
 .diagram-video-slot video {
   width: 100%;
