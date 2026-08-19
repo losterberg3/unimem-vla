@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const memoryEl = document.getElementById("diagram-memory-text");
   if (!host || !stage) return;
 
-  fetch("assets/img/model_overview_interactive.svg?v=11")
+  fetch("assets/img/model_overview_interactive.svg?v=12")
     .then((r) => r.text())
     .then((raw) => {
       const cleaned = raw
@@ -62,10 +62,11 @@ document.addEventListener("DOMContentLoaded", () => {
       el.style.opacity = "0";
     });
 
-    // idle indicator: pulses continuously by default, hidden whenever the
-    // annotation photo is flashing in its place
+    // idle indicator: hidden until the video starts, then pulses
+    // continuously except when the annotation photo is flashing in its place
     if (nullEventEl) {
-      nullEventEl.style.animation = "unimem-null-pulse 1.6s ease-in-out infinite";
+      nullEventEl.style.transition = "opacity 0.4s ease";
+      nullEventEl.style.opacity = "0";
     }
 
     // baked-in photos the video now covers - never shown
@@ -86,8 +87,8 @@ document.addEventListener("DOMContentLoaded", () => {
       el.style.transformOrigin = cx + "px " + cy + "px";
       el.style.transform = "translate(" + dx + "px, " + dy + "px) scale(" + scale + ")";
     };
-    boostAndMove(byId("keyframe-encoder-text"), 1.6, 20, -20);
-    boostAndMove(byId("ztlabel-text"), 1.6, 40, 7);
+    boostAndMove(byId("keyframe-encoder-text"), 1.6, 45, -20);
+    boostAndMove(byId("ztlabel-text"), 1.6, 47, 7);
 
     const slotPositions = [slot1, slot2, slot3].filter(Boolean);
 
@@ -202,6 +203,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         if (flowMatchingArrow) {
           flowMatchingArrow.style.animation = "unimem-flow-dash 0.5s linear infinite";
+        }
+        if (nullEventEl) {
+          nullEventEl.style.opacity = "1";
+          nullEventEl.style.animation = "unimem-null-pulse 1.6s ease-in-out infinite";
         }
       }, 6000);
     }
@@ -357,7 +362,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (flowMatchingArrow) flowMatchingArrow.style.animation = "none";
       annotationGroup.forEach((el) => (el.style.opacity = "0"));
-      if (nullEventEl) nullEventEl.style.opacity = "1";
+      if (nullEventEl) {
+        nullEventEl.style.transition = "none";
+        nullEventEl.style.opacity = "0";
+        nullEventEl.style.animation = "none";
+      }
       renderQueue(false);
       hcacheCylinder.forEach((el) => {
         el.style.transition = "none";
@@ -380,9 +389,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      if (nullEventEl) nullEventEl.style.opacity = "0";
+      if (nullEventEl) {
+        nullEventEl.style.animation = "none";
+        nullEventEl.style.opacity = "0";
+      }
       blinkAnnotationThenHide(() => {
-        if (nullEventEl) nullEventEl.style.opacity = "1";
+        if (nullEventEl) {
+          nullEventEl.style.opacity = "1";
+          nullEventEl.style.animation = "unimem-null-pulse 1.6s ease-in-out infinite";
+        }
       });
       flowArrowFor(3000);
 
