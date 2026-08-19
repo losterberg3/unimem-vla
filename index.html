@@ -108,7 +108,15 @@
       <h2 class="section-title">How UniMem works</h2>
 
       <figure class="figure-medium">
-        <img src="assets/img/model_overview.svg?v=3" alt="UniMem model overview diagram">
+        <div class="diagram-stage" id="diagram-stage">
+          <div class="diagram-svg-host" id="diagram-svg-host" aria-hidden="true"></div>
+          <div class="diagram-video-slot">
+            <video id="diagram-video" muted loop autoplay playsinline>
+              <source src="assets/video/ours2_loop.mp4" type="video/mp4">
+            </video>
+          </div>
+        </div>
+        <p class="diagram-memory-text" id="diagram-memory-text">History: none</p>
         <figcaption><b>Overview of UniMem.</b> (Top) An event classifier detects sparse sub-task transition events
         from the backbone's latent representation, updating both textual memory and a keyframe cache. (Middle) A
         keyframe encoder conditions on the autoregressively updated cache and the current image, while textual
@@ -485,5 +493,6 @@
 </footer>
 
 <script src="assets/js/main.js"></script>
+<script src="assets/js/diagram.js"></script>
 </body>
 </html>
