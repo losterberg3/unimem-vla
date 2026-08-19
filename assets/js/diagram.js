@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const video = document.getElementById("diagram-video");
   const videoSlot = document.getElementById("diagram-video-slot");
   const memoryEl = document.getElementById("diagram-memory-text");
+  const nullEventEl = document.getElementById("diagram-null-event");
   if (!host || !stage) return;
 
   fetch("assets/img/model_overview_interactive.svg?v=10")
@@ -268,7 +269,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 400);
     }
 
-    function blinkAnnotationThenHide() {
+    function blinkAnnotationThenHide(onFullyHidden) {
       if (annotationGroup.length === 0) return;
       annotationGroup.forEach((el) => (el.style.transition = "opacity 0.15s ease"));
       let n = 0;
@@ -284,6 +285,9 @@ document.addEventListener("DOMContentLoaded", () => {
               el.style.transition = "opacity 0.5s ease";
               el.style.opacity = "0";
             });
+            setTimeout(() => {
+              if (onFullyHidden) onFullyHidden();
+            }, 500);
           }, 900);
         }
       }, 180);
@@ -347,6 +351,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (flowMatchingArrow) flowMatchingArrow.style.animation = "none";
       annotationGroup.forEach((el) => (el.style.opacity = "0"));
+      if (nullEventEl) nullEventEl.style.display = "flex";
       renderQueue(false);
       hcacheCylinder.forEach((el) => {
         el.style.transition = "none";
@@ -369,7 +374,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      blinkAnnotationThenHide();
+      if (nullEventEl) nullEventEl.style.display = "none";
+      blinkAnnotationThenHide(() => {
+        if (nullEventEl) nullEventEl.style.display = "flex";
+      });
       flowArrowFor(3000);
 
       queue.push(ev.href);
