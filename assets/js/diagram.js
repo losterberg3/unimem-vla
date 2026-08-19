@@ -62,10 +62,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const EVENTS = [
-      { t: 7.3, label: "human tap", slots: [slot1] },
-      { t: 11.44, label: "grabbed spoon", slots: [slot2] },
-      { t: 14.56, label: "scooped beans", slots: [slot3] },
-      { t: 19.76, label: "poured beans", slots: slot4 },
+      { t: 1.72, label: "human tap", slots: [slot1] },
+      { t: 4.86, label: "grabbed spoon", slots: [slot2] },
+      { t: 7.99, label: "scooped beans", slots: [slot3] },
+      { t: 13.19, label: "poured beans", slots: slot4 },
     ];
 
     let fired = 0;
