@@ -270,6 +270,11 @@ h3.sub-title + figure { margin-top: -12px; }
   to { stroke-dashoffset: -18; }
 }
 
+@keyframes unimem-squish {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.7); }
+}
+
 .figure-wide {
   width: 70vw;
   max-width: 1300px;

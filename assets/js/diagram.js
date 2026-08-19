@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const memoryEl = document.getElementById("diagram-memory-text");
   if (!host || !stage) return;
 
-  fetch("assets/img/model_overview_interactive.svg?v=5")
+  fetch("assets/img/model_overview_interactive.svg?v=6")
     .then((r) => r.text())
     .then((raw) => {
       const cleaned = raw
@@ -53,6 +53,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentImageBox = byRole("current-image-box");
     const actionExpertToVideoArrow = byId("action-expert-to-video-arrow");
     const flowMatchingArrow = byId("flow-matching-arrow");
+    const outerDashedBoxes = byRole("outer-dashed-box");
+
+    // the faint dashed boxes wrapping H_cache and the encoder/tokenizer -
+    // removed entirely, for the whole time
+    outerDashedBoxes.forEach((el) => {
+      el.style.opacity = "0";
+    });
 
     // baked-in photos the video now covers - never shown
     currentImageBox.forEach((el) => {
@@ -140,9 +147,21 @@ document.addEventListener("DOMContentLoaded", () => {
       el.style.opacity = "0";
     });
     hcacheCylinder.forEach((el) => {
-      el.style.transition = "opacity 0.6s ease";
+      el.style.transition = "none";
       el.style.opacity = "0.22";
     });
+
+    // squish animation for the action-expert-to-video arrow: base fixed,
+    // tip dips down and springs back, looping for the rest of the video
+    if (actionExpertToVideoArrow && actionExpertToVideoArrow.getBBox) {
+      try {
+        const b = actionExpertToVideoArrow.getBBox();
+        actionExpertToVideoArrow.style.transformOrigin =
+          b.x + b.width / 2 + "px " + (b.y + b.height) + "px";
+      } catch (e) {
+        /* skip transform-origin if bbox unavailable */
+      }
+    }
 
     function playIntro() {
       setTimeout(() => {
@@ -150,6 +169,10 @@ document.addEventListener("DOMContentLoaded", () => {
           videoSlot.style.transition = "opacity 2s ease";
           videoSlot.style.opacity = "1";
         }
+        hcacheCylinder.forEach((el) => {
+          el.style.transition = "opacity 2s ease";
+          el.style.opacity = "1";
+        });
       }, 4000);
       setTimeout(() => {
         if (video) {
@@ -159,6 +182,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (actionExpertToVideoArrow) {
           actionExpertToVideoArrow.style.transition = "opacity 0.4s ease";
           actionExpertToVideoArrow.style.opacity = "1";
+          actionExpertToVideoArrow.style.animation =
+            "unimem-squish 1.2s ease-in-out infinite";
         }
         if (flowMatchingArrow) {
           flowMatchingArrow.style.animation = "unimem-flow-dash 0.5s linear infinite";
@@ -310,11 +335,15 @@ document.addEventListener("DOMContentLoaded", () => {
       if (actionExpertToVideoArrow) {
         actionExpertToVideoArrow.style.transition = "none";
         actionExpertToVideoArrow.style.opacity = "0";
+        actionExpertToVideoArrow.style.animation = "none";
       }
       if (flowMatchingArrow) flowMatchingArrow.style.animation = "none";
       [dashedBorder, ...annotationGroup].filter(Boolean).forEach((el) => (el.style.opacity = "0"));
       renderQueue(false);
-      hcacheCylinder.forEach((el) => (el.style.opacity = "0.22"));
+      hcacheCylinder.forEach((el) => {
+        el.style.transition = "none";
+        el.style.opacity = "0.22";
+      });
       playIntro();
     }
 
@@ -325,7 +354,6 @@ document.addEventListener("DOMContentLoaded", () => {
       setMemory("History: " + history.join(", "));
 
       dashedBorder.style.opacity = "1";
-      hcacheCylinder.forEach((el) => (el.style.opacity = "1"));
 
       blinkAnnotationThenHide();
       flowArrowFor(3000);
