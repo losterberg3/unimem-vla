@@ -108,20 +108,16 @@ document.addEventListener("DOMContentLoaded", () => {
       el.style.opacity = "0";
     });
 
-    // the intro group: nothing for 1s, then these fade in over 2s and stay
-    // visible for the rest of the loop
-    const introGroup = [...coreBoxes, eventClassifierBox, ...fphiArrow, ...ztLabel].filter(
-      Boolean
-    );
-    introGroup.forEach((el) => {
-      el.style.transition = "opacity 2s ease";
-      el.style.opacity = "0";
-    });
+    // Gemma Backbone, Action Expert, Tokenizer, Keyframe Encoder, f_phi,
+    // the arrow into f_phi, and z_t are left untouched here - visible
+    // immediately with no fade and never hidden, unlike everything below.
+
+    // everything else starts hidden; only the video gets a timed fade-in,
+    // the rest is revealed later by actual events
     if (videoSlot) {
       videoSlot.style.transition = "opacity 2s ease";
       videoSlot.style.opacity = "0";
     }
-
     [dashedBorder, ...annotationGroup].filter(Boolean).forEach((el) => {
       el.style.transition = "opacity 0.4s ease";
       el.style.opacity = "0";
@@ -137,9 +133,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function playIntro() {
       setTimeout(() => {
-        introGroup.forEach((el) => (el.style.opacity = "1"));
         if (videoSlot) videoSlot.style.opacity = "1";
-      }, 1000);
+      }, 4000);
     }
 
     const EVENTS = [
@@ -275,7 +270,6 @@ document.addEventListener("DOMContentLoaded", () => {
       history = [];
       queue = [];
       setMemory("History: none");
-      introGroup.forEach((el) => (el.style.opacity = "0"));
       if (videoSlot) videoSlot.style.opacity = "0";
       [dashedBorder, ...annotationGroup].filter(Boolean).forEach((el) => (el.style.opacity = "0"));
       renderQueue(false);
