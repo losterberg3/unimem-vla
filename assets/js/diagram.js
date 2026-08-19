@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const memoryEl = document.getElementById("diagram-memory-text");
   if (!host || !stage) return;
 
-  fetch("assets/img/model_overview_interactive.svg?v=13")
+  fetch("assets/img/model_overview_interactive.svg?v=14")
     .then((r) => r.text())
     .then((raw) => {
       const cleaned = raw
@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
       el.style.transformOrigin = cx + "px " + cy + "px";
       el.style.transform = "translate(" + dx + "px, " + dy + "px) scale(" + scale + ")";
     };
-    boostAndMove(byId("keyframe-encoder-text"), 1.6, 40, -20);
+    boostAndMove(byId("keyframe-encoder-text"), 1.6, 35, -20);
     boostAndMove(byId("ztlabel-text"), 1.6, 45, 7);
 
     const slotPositions = [slot1, slot2, slot3].filter(Boolean);
