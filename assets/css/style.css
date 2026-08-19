@@ -194,7 +194,7 @@ p.lead {
 
 /* FIGURES */
 figure {
-  margin: 0 0 10px;
+  margin: 0 0 2px;
   text-align: center;
 }
 figure img {
@@ -205,11 +205,14 @@ figure img {
 figcaption {
   font-size: 0.85rem;
   color: var(--ink-soft);
-  margin-top: 10px;
+  margin-top: 2px;
   text-align: left;
   padding: 0 4px;
 }
 figcaption b { color: var(--ink); }
+
+h2.section-title + figure,
+h3.sub-title + figure { margin-top: -12px; }
 
 .figure-medium img { height: 760px; width: auto; max-width: 100%; }
 .figure-small img { max-height: 520px; width: auto; }
