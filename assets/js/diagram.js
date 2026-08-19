@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const memoryEl = document.getElementById("diagram-memory-text");
   if (!host || !stage) return;
 
-  fetch("assets/img/model_overview_interactive.svg?v=9")
+  fetch("assets/img/model_overview_interactive.svg?v=10")
     .then((r) => r.text())
     .then((raw) => {
       const cleaned = raw
@@ -68,15 +68,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // bump font size on the labels called out as too small, scaling from
     // each element's own measured center (transform-box:fill-box was
-    // unreliable on these foreignObject-based text nodes)
-    Array.from(host.querySelectorAll('[data-font-boost="1"]')).forEach((el) => {
-      if (!el.getBBox) return;
+    // unreliable on these foreignObject-based text nodes), then nudge
+    // position - translate applies after scale, in the parent's coordinate
+    // system, so it's unaffected by transform-origin
+    const boostAndMove = (el, scale, dx, dy) => {
+      if (!el || !el.getBBox) return;
       const b = el.getBBox();
       const cx = b.x + b.width / 2;
       const cy = b.y + b.height / 2;
       el.style.transformOrigin = cx + "px " + cy + "px";
-      el.style.transform = "scale(1.5)";
-    });
+      el.style.transform = "translate(" + dx + "px, " + dy + "px) scale(" + scale + ")";
+    };
+    boostAndMove(byId("keyframe-encoder-text"), 1.6, 10, -10);
+    boostAndMove(byId("ztlabel-text"), 1.6, 20, 5);
 
     const slotPositions = [slot1, slot2, slot3].filter(Boolean);
 
