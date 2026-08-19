@@ -37,19 +37,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const ztLabel = byRole("ztlabel-connector");
     const keyframeEncoder = byRole("keyframe-encoder-box");
 
+    const SLIDE_UNITS = 22;
+    const slotEls = [slot1, slot2, slot3, ...slot4].filter(Boolean);
+
     const fadeGroups = [
       eventClassifierBox,
       dashedBorder,
       ...annotation,
-      slot1,
-      slot2,
-      slot3,
-      ...slot4,
       ...ztLabel,
     ].filter(Boolean);
 
     fadeGroups.forEach((el) => {
       el.style.transition = "opacity 0.5s ease";
+      el.style.opacity = "0";
+    });
+    slotEls.forEach((el) => {
+      el.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+      el.style.transform = "translateX(" + SLIDE_UNITS + "px)";
       el.style.opacity = "0";
     });
     hcacheCylinder.forEach((el) => {
@@ -71,11 +75,24 @@ document.addEventListener("DOMContentLoaded", () => {
       if (memoryEl) memoryEl.textContent = text;
     }
 
+    function revealSlot(el) {
+      if (!el) return;
+      el.style.opacity = "1";
+      el.style.transform = "translateX(0)";
+    }
+
+    function hideSlot(el) {
+      if (!el) return;
+      el.style.opacity = "0";
+      el.style.transform = "translateX(" + SLIDE_UNITS + "px)";
+    }
+
     function resetDiagram() {
       fired = 0;
       history = [];
       setMemory("History: none");
       fadeGroups.forEach((el) => (el.style.opacity = "0"));
+      slotEls.forEach(hideSlot);
       hcacheCylinder.forEach((el) => (el.style.opacity = "0.22"));
     }
 
@@ -130,21 +147,17 @@ document.addEventListener("DOMContentLoaded", () => {
       setMemory("History: " + history.join(", "));
       revealClassifier();
       hcacheCylinder.forEach((el) => (el.style.opacity = "1"));
-      ev.slots.forEach((el) => {
-        if (el) el.style.opacity = "1";
-      });
+      ev.slots.forEach(revealSlot);
       if (ev.slots[0]) flyToEncoder(ev.slots[0]);
     }
 
     function runIntro() {
       hcacheCylinder.forEach((el) => (el.style.opacity = "0.22"));
       setTimeout(() => {
-        if (slot1) {
-          slot1.style.opacity = "1";
-          flyToEncoder(slot1);
-        }
+        revealSlot(slot1);
+        flyToEncoder(slot1);
         setTimeout(() => {
-          if (slot1 && fired === 0) slot1.style.opacity = "0";
+          if (fired === 0) hideSlot(slot1);
         }, 1400);
       }, 500);
     }
