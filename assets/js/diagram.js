@@ -4,10 +4,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const video = document.getElementById("diagram-video");
   const videoSlot = document.getElementById("diagram-video-slot");
   const memoryEl = document.getElementById("diagram-memory-text");
-  const nullEventEl = document.getElementById("diagram-null-event");
   if (!host || !stage) return;
 
-  fetch("assets/img/model_overview_interactive.svg?v=10")
+  fetch("assets/img/model_overview_interactive.svg?v=11")
     .then((r) => r.text())
     .then((raw) => {
       const cleaned = raw
@@ -55,12 +54,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const actionExpertToVideoArrow = byId("action-expert-to-video-arrow");
     const flowMatchingArrow = byId("flow-matching-arrow");
     const outerDashedBoxes = byRole("outer-dashed-box");
+    const nullEventEl = byId("null-event-text");
 
     // the faint dashed boxes wrapping H_cache and the encoder/tokenizer -
     // removed entirely, for the whole time
     outerDashedBoxes.forEach((el) => {
       el.style.opacity = "0";
     });
+
+    // idle indicator: pulses continuously by default, hidden whenever the
+    // annotation photo is flashing in its place
+    if (nullEventEl) {
+      nullEventEl.style.animation = "unimem-null-pulse 1.6s ease-in-out infinite";
+    }
 
     // baked-in photos the video now covers - never shown
     currentImageBox.forEach((el) => {
@@ -80,8 +86,8 @@ document.addEventListener("DOMContentLoaded", () => {
       el.style.transformOrigin = cx + "px " + cy + "px";
       el.style.transform = "translate(" + dx + "px, " + dy + "px) scale(" + scale + ")";
     };
-    boostAndMove(byId("keyframe-encoder-text"), 1.6, 10, -10);
-    boostAndMove(byId("ztlabel-text"), 1.6, 20, 5);
+    boostAndMove(byId("keyframe-encoder-text"), 1.6, 20, -20);
+    boostAndMove(byId("ztlabel-text"), 1.6, 40, 7);
 
     const slotPositions = [slot1, slot2, slot3].filter(Boolean);
 
@@ -351,7 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (flowMatchingArrow) flowMatchingArrow.style.animation = "none";
       annotationGroup.forEach((el) => (el.style.opacity = "0"));
-      if (nullEventEl) nullEventEl.style.display = "flex";
+      if (nullEventEl) nullEventEl.style.opacity = "1";
       renderQueue(false);
       hcacheCylinder.forEach((el) => {
         el.style.transition = "none";
@@ -374,9 +380,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      if (nullEventEl) nullEventEl.style.display = "none";
+      if (nullEventEl) nullEventEl.style.opacity = "0";
       blinkAnnotationThenHide(() => {
-        if (nullEventEl) nullEventEl.style.display = "flex";
+        if (nullEventEl) nullEventEl.style.opacity = "1";
       });
       flowArrowFor(3000);
 
