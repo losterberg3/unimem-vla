@@ -48,7 +48,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const slot2 = byId("hcache-slot-2");
     const slot3 = byId("hcache-slot-3");
     const ztLabel = byRole("ztlabel-connector");
-    const keyframeEncoder = byRole("keyframe-encoder-box");
     const currentImageBox = byRole("current-image-box");
     const actionExpertToVideoArrow = byId("action-expert-to-video-arrow");
     const flowMatchingArrow = byId("flow-matching-arrow");
@@ -317,36 +316,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }, ms);
     }
 
-    function flyToEncoder(href, srcRect) {
-      if (!href || keyframeEncoder.length === 0) return;
-      const dstRect = keyframeEncoder[0].getBoundingClientRect();
-      const stageRect = stage.getBoundingClientRect();
-
-      const clone = document.createElement("img");
-      clone.src = href;
-      clone.style.position = "absolute";
-      clone.style.left = srcRect.left - stageRect.left + "px";
-      clone.style.top = srcRect.top - stageRect.top + "px";
-      clone.style.width = srcRect.width + "px";
-      clone.style.height = srcRect.height + "px";
-      clone.style.borderRadius = "6px";
-      clone.style.boxShadow = "0 4px 14px rgba(0,0,0,0.25)";
-      clone.style.zIndex = "5";
-      clone.style.transition =
-        "transform 0.7s cubic-bezier(.4,0,.2,1), opacity 0.7s ease";
-      clone.style.pointerEvents = "none";
-      stage.appendChild(clone);
-
-      const dx = dstRect.left + dstRect.width / 2 - (srcRect.left + srcRect.width / 2);
-      const dy = dstRect.top + dstRect.height / 2 - (srcRect.top + srcRect.height / 2);
-
-      requestAnimationFrame(() => {
-        clone.style.transform = `translate(${dx}px, ${dy}px) scale(0.35)`;
-        clone.style.opacity = "0";
-      });
-      setTimeout(() => clone.remove(), 800);
-    }
-
     function resetDiagram() {
       fired = 0;
       history = [];
@@ -413,12 +382,6 @@ document.addEventListener("DOMContentLoaded", () => {
       queue.push(ev.href);
       if (queue.length > 3) queue.shift();
       renderQueue(true);
-
-      setTimeout(() => {
-        if (slot3 && ev.href) {
-          flyToEncoder(ev.href, slot3.getBoundingClientRect());
-        }
-      }, 850);
 
       if (video) {
         setTimeout(() => {
