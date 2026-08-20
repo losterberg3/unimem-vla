@@ -74,22 +74,6 @@ document.addEventListener("DOMContentLoaded", () => {
       el.style.opacity = "0";
     });
 
-    // bump font size on the labels called out as too small, scaling from
-    // each element's own measured center (transform-box:fill-box was
-    // unreliable on these foreignObject-based text nodes), then nudge
-    // position - translate applies after scale, in the parent's coordinate
-    // system, so it's unaffected by transform-origin
-    const boostAndMove = (el, scale, dx, dy) => {
-      if (!el || !el.getBBox) return;
-      const b = el.getBBox();
-      const cx = b.x + b.width / 2;
-      const cy = b.y + b.height / 2;
-      el.style.transformOrigin = cx + "px " + cy + "px";
-      el.style.transform = "translate(" + dx + "px, " + dy + "px) scale(" + scale + ")";
-    };
-    boostAndMove(byId("keyframe-encoder-text"), 1.6, 35, -20);
-    boostAndMove(byId("ztlabel-text"), 1.6, 45, 7);
-
     const slotPositions = [slot1, slot2, slot3].filter(Boolean);
 
     let SLOT_SPACING = 63;
