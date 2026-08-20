@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const videoSlot = document.getElementById("diagram-video-slot");
   if (!host || !stage) return;
 
-  fetch("assets/img/model_overview_interactive.svg?v=17")
+  fetch("assets/img/model_overview_interactive.svg?v=18")
     .then((r) => r.text())
     .then((raw) => {
       const cleaned = raw
