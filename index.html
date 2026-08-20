@@ -187,7 +187,7 @@
       <h2 class="section-title">Hardware tasks (xArm6)</h2>
       <p>UniMem is benchmarked against <b>MemER</b> — a hierarchical VLM + <span class="mono">π<sub>0.5</sub></span>
       system — as the primary hardware baseline, plus no-memory, text-only, and keyframe-only ablations. UniMem
-      reaches <b>80.0%</b> average success versus MemER's 43.5%, while conditioning the low-level policy on memory
+      reaches <b>80.0%</b> average success versus MemER's 43.5% due to conditioning the low-level policy on memory
       directly at every control step rather than through an intermediate subtask command.</p>
 
       <div class="table-wrap">
@@ -307,7 +307,7 @@
       <h2 class="section-title">Simulation tasks (robosuite)</h2>
       <p>In simulation, UniMem is compared against <span class="mono">π<sub>0.5</sub></span> with a video-encoder
       baseline (V.E.) that samples frames at fixed 6-second intervals using the same keyframe encoder architecture
-      — isolating whether arbitrary frame sampling introduces spurious correlations relative to event-driven
+      — isolating how arbitrary frame sampling performs relative to event-driven
       keyframes. UniMem reaches <b>93.4%</b> average success versus 68.2% for the fixed-interval baseline.</p>
 
       <div class="table-wrap">
@@ -461,7 +461,7 @@
     <div class="container">
       <p class="section-label">Discussion</p>
       <h2 class="section-title">Conclusion &amp; limitations</h2>
-      <p>UniMem shows that long-horizon spatial and sequential memory can be unified within a single VLA backbone —
+      <p>UniMem shows that long-horizon textual and visual memory can be unified within a single VLA backbone —
       matching or beating hierarchical, decoupled memory systems while training with a single-stage pipeline and
       running at near single-frame inference speed. Across nine tasks in simulation and hardware, this translates
       to higher success rates, simpler training, and low-latency real-world rollouts.</p>
@@ -498,7 +498,6 @@
 <footer>
   <div class="container">
     <p>Lars Osterberg, Maggie Wang, Mac Schwager &middot; Stanford University, 2026</p>
-    <p>Site design adapted from common project-page conventions in robot learning research.</p>
   </div>
 </footer>
 
