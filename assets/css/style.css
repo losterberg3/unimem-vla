@@ -253,19 +253,6 @@ h3.sub-title + figure { margin-top: -12px; }
   object-fit: cover;
   display: block;
 }
-.diagram-memory-text {
-  margin: 14px auto 0;
-  max-width: 480px;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.82rem;
-  text-align: center;
-  background: var(--cardinal-light);
-  border: 1px solid var(--cardinal-mid);
-  border-radius: 8px;
-  padding: 8px 16px;
-  color: var(--ink);
-}
-
 @keyframes unimem-null-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.35; }

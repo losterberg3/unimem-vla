@@ -3,10 +3,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const stage = document.getElementById("diagram-stage");
   const video = document.getElementById("diagram-video");
   const videoSlot = document.getElementById("diagram-video-slot");
-  const memoryEl = document.getElementById("diagram-memory-text");
   if (!host || !stage) return;
 
-  fetch("assets/img/model_overview_interactive.svg?v=15")
+  fetch("assets/img/model_overview_interactive.svg?v=16")
     .then((r) => r.text())
     .then((raw) => {
       const cleaned = raw
@@ -53,6 +52,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const flowMatchingArrow = byId("flow-matching-arrow");
     const outerDashedBoxes = byRole("outer-dashed-box");
     const nullEventEl = byId("null-event-text");
+    const giantNText = byRole("giant-n-text");
+    const tokenizerMemoryText = byId("tokenizer-memory-text");
+    const memoryValueEl = byId("tokenizer-memory-value");
 
     // the faint dashed boxes wrapping H_cache and the encoder/tokenizer -
     // removed entirely, for the whole time
@@ -125,11 +127,6 @@ document.addEventListener("DOMContentLoaded", () => {
       ...(flowArrow ? [flowArrow] : []),
     ];
 
-    // permanently hidden - never revealed
-    tokenizerInputText.forEach((el) => {
-      el.style.opacity = "0";
-    });
-
     // Gemma Backbone, Action Expert, Tokenizer, Keyframe Encoder, f_phi,
     // the arrow into f_phi, z_t, and the flow-matching loop arrow around
     // Action Expert are left untouched here - visible immediately with no
@@ -157,6 +154,15 @@ document.addEventListener("DOMContentLoaded", () => {
     encoderInputText.forEach((el) => {
       el.style.opacity = "0";
     });
+    tokenizerInputText.forEach((el) => {
+      el.style.opacity = "0";
+    });
+    giantNText.forEach((el) => {
+      el.style.opacity = "0";
+    });
+    if (tokenizerMemoryText) {
+      tokenizerMemoryText.style.opacity = "0";
+    }
     annotationGroup.forEach((el) => {
       el.style.transition = "opacity 0.4s ease";
       el.style.opacity = "0";
@@ -196,6 +202,18 @@ document.addEventListener("DOMContentLoaded", () => {
           el.style.transition = "opacity 2s ease";
           el.style.opacity = "1";
         });
+        tokenizerInputText.forEach((el) => {
+          el.style.transition = "opacity 2s ease";
+          el.style.opacity = "1";
+        });
+        giantNText.forEach((el) => {
+          el.style.transition = "opacity 2s ease";
+          el.style.opacity = "1";
+        });
+        if (tokenizerMemoryText) {
+          tokenizerMemoryText.style.transition = "opacity 2s ease";
+          tokenizerMemoryText.style.opacity = "1";
+        }
       }, 4000);
       setTimeout(() => {
         if (video) {
@@ -234,7 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let queue = [];
 
     function setMemory(text) {
-      if (memoryEl) memoryEl.textContent = text;
+      if (memoryValueEl) memoryValueEl.textContent = text;
     }
 
     function renderQueue(withAnimation) {
@@ -327,7 +345,7 @@ document.addEventListener("DOMContentLoaded", () => {
       fired = 0;
       history = [];
       queue = [];
-      setMemory("History: none");
+      setMemory("none");
       if (video) {
         video.pause();
         video.currentTime = 0;
@@ -349,6 +367,18 @@ document.addEventListener("DOMContentLoaded", () => {
         el.style.transition = "none";
         el.style.opacity = "0";
       });
+      tokenizerInputText.forEach((el) => {
+        el.style.transition = "none";
+        el.style.opacity = "0";
+      });
+      giantNText.forEach((el) => {
+        el.style.transition = "none";
+        el.style.opacity = "0";
+      });
+      if (tokenizerMemoryText) {
+        tokenizerMemoryText.style.transition = "none";
+        tokenizerMemoryText.style.opacity = "0";
+      }
       if (flowMatchingArrow) flowMatchingArrow.style.animation = "none";
       annotationGroup.forEach((el) => (el.style.opacity = "0"));
       if (nullEventEl) {
@@ -368,7 +398,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (video) video.pause();
 
       history.push(ev.label);
-      setMemory("History: " + history.join(", "));
+      setMemory(history.join(", "));
 
       if (ev.href) {
         const photoImg = getImageEl(eventClassifierPhoto);
