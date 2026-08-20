@@ -9,6 +9,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css?v=11">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    }
+  };
+</script>
+<script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
 
@@ -46,33 +54,33 @@
   <section id="abstract">
     <div class="container">
       <p class="section-label">Abstract</p>
-      <h2 class="section-title">Memory and control, one backbone</h2>
+      <h2 class="section-title">Mulitmodal Memory and control, one backbone</h2>
       <div class="abstract-box">
-        While Vision-Language-Action (VLA) models have leveraged internet-scale pretraining and task-focused
-        finetuning to achieve impressive long-horizon goals, they often struggle with non-Markovian tasks that
-        require memory. Existing approaches to memory typically involve additional Vision-Language Models (VLMs)
-        for long-term memory management, introducing a memory bottleneck and a fractured training pipeline.
-        Conditioning on multiple historical frames can provide the VLA with access to more descriptive features
-        of past scenes, but can degrade performance if frames are chosen at arbitrary, fixed intervals. To address
-        this, we present <b>UniMem</b>, a framework that unifies high-level, multimodal memory and low-level
-        control under one backbone. UniMem employs an event classifier for memory updates, a keyframe encoder for
-        dense spatial memory, and a keyframe caching technique to minimize overhead during policy rollouts. We
-        evaluate UniMem across five simulation and four hardware tasks targeting sequential and spatial memory,
-        demonstrating that our unified, single-model system drastically outperforms fixed-interval image sampling
-        baselines (<b>93.4% vs. 68.2%</b>) in simulation and hierarchical baselines (<b>80.0% vs. 43.5%</b>) in
-        hardware, while offering faster inference and a simple training pipeline for easy adoption.
+        While Vision-Language-Action (VLA) models have leveraged internet-scale pretraining and task-focused 
+        finetuning to achieve strong performance on long-horizon tasks, they often struggle with non-Markovian 
+        tasks that require memory. Existing approaches to memory typically involve additional Vision-Language-Models 
+        (VLMs) for long-term memory management, introducing a memory bottleneck and a fractured training pipeline. 
+        Conditioning on multiple historical frames can provide the VLA with access to more descriptive features of 
+        past scenes, but can degrade performance if frames are chosen at arbitrary, fixed intervals. To address these 
+        limitations, we present <b>UniMem</b>, a framework that unifies high-level, multimodal memory and low-level control 
+        under one backbone. UniMem employs an event classifier for memory updates, a keyframe encoder for dense 
+        spatial memory, and a keyframe caching technique to minimize overhead during policy rollouts. We evaluate 
+        UniMem across five simulation and four hardware tasks targeting sequential and spatial memory, demonstrating 
+        that our unified, single-model system outperforms fixed-interval image sampling baselines (<b>93.4% vs. 68.2%</b>) 
+        in simulation and hierarchical baselines (<b>80.0% vs. 43.5%</b>) in hardware, while offering faster inference and 
+        a simple training pipeline for easy adoption.
       </div>
 
       <h3 class="sub-title">Overview</h3>
       <p class="lead">
-        State-of-the-art VLA policies act almost entirely on the current camera frame — they have no architectural
+        State-of-the-art VLA policies act entirely on the current camera frame — they have no architectural
         memory. That's fine for short, fully-observable tasks, but it breaks down the moment a task requires
         knowing <i>what already happened</i>: state-of-the-art policies still fail at tasks as simple as picking
         something up and putting it back where it was. Two moments in a task can look nearly identical while
-        demanding completely different actions depending on history — a failure mode the paper calls
-        <b>perceptual aliasing</b>. Prior fixes either bolt on a second, slower VLM to plan over history (a
-        hierarchical, decoupled pipeline) or feed the policy a fixed window of recent frames (which invites
-        spurious correlations and doesn't scale). UniMem instead adds a lightweight event classifier directly on
+        demanding completely different actions depending on history — a failure mode we call
+        <b>perceptual aliasing</b>. Prior methods either add a second, slower VLM to plan over history (a
+        hierarchical, decoupled pipeline) or feed the policy a fixed window of arbitrarily sampled recent frames (which 
+        invites spurious correlations and doesn't scale). UniMem instead adds a lightweight event classifier directly on
         top of a VLA's own latent features. When it detects a task-critical milestone, it (1) appends a short
         phrase to a running textual memory and (2) caches the current multi-view image as a keyframe — both fed
         back into the <i>same</i> backbone that produces actions. Because keyframe hidden states are cached rather
@@ -116,13 +124,15 @@
             </video>
           </div>
         </div>
-        <figcaption><b>Overview of UniMem.</b> (Top) An event classifier detects sparse sub-task transition events
-        from the backbone's latent representation, updating both textual memory and a keyframe cache. (Middle) A
-        keyframe encoder conditions on the autoregressively updated cache and the current image, while textual
-        descriptions of new events are appended to memory alongside the task prompt and proprioception — providing
-        multimodal memory directly to the backbone and action expert. (Bottom) Hidden states of past keyframes are
-        cached at temporal attention layers for fast inference; only positional embeddings need adjusting when a
-        new keyframe is added.</figcaption>
+        <figcaption><b>Overview of UniMem.</b> (Top) An event classifier ($f_\phi$) detects sparse sub-task
+        transition events ($e_t$) in a task vocabulary set ($\mathcal{E}$) from the backbone's latent ($z_t$),
+        updating both textual memory ($\mathcal{M}_t$) and a keyframe cache ($\mathcal{H}_{\text{cache}}$).
+        (Middle) Our image keyframe encoder conditions on our autoregressively updated $\mathcal{H}_{\text{cache}}$
+        and the current image $I_t$, while textual descriptions of new events are added to $\mathcal{M}_t$ with the
+        task prompt $g$ and proprioception $q_t$. This provides multimodal memory directly to our backbone and
+        action expert. (Bottom) We cache the hidden state of past keyframes in $\mathcal{H}_{\text{cache}}$ at
+        temporal attention layers of our encoder for fast inference and only update their positional embeddings at
+        subsequent timesteps.</figcaption>
       </figure>
 
       <h3 class="sub-title">Event classification &amp; textual memory</h3>
@@ -130,9 +140,9 @@
       backbone and a Gemma action expert. A lightweight MLP head is attached to the backbone's final-layer latent
       representation and trained jointly with the policy to predict a task-relevant event (e.g. <span class="mono">"grabbed box"</span>)
       or a null class at every step. Because this head shares gradients with the backbone, it doubles as auxiliary
-      supervision — pushing the model's features toward whatever is relevant for memory and action. Detected
+      supervision — pushing the model's interanl features toward whatever is relevant for memory and action. Detected
       events are appended in natural language to a running textual memory that conditions every subsequent step,
-      giving the policy an explicit, cheap signal of its own progress.</p>
+      giving the policy an explicit and inexpensive signal of its own progress.</p>
 
       <h3 class="sub-title">Keyframe encoder &amp; caching</h3>
       <p>Text alone can't disambiguate everything — e.g. spatial questions like <i>which</i> cup or bin. So every
@@ -147,8 +157,11 @@
         <img src="assets/img/method_labeling.svg?v=2" alt="Automated data labeling pipeline diagram">
         <figcaption><b>Automated data labeling.</b> An LLM agent (Claude Sonnet 5) is prompted to generate a script
         that labels demonstrations with events and textual memory strings directly from action signatures (e.g. a
-        gripper closing means an object was grasped). A human spot-checks a subset of labeled rollouts and the
-        script is refined if needed — no manual frame-by-frame annotation required.</figcaption>
+        gripper closing means an object was grasped). Multiple frames in a window $W_i$ are labeled with the
+        corresponding event $e_t$, and $\mathcal{M}_t$ is only updated once this window has passed. At training
+        time, a keyframe from each past $W_i$ along with $I_t$ is used to build $\mathcal{H}_t$. A human
+        spot-checks a subset of labeled rollouts and the script is refined if needed — no manual frame-by-frame
+        annotation required.</figcaption>
       </figure>
     </div>
   </section>
