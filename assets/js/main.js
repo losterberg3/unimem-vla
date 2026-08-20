@@ -18,7 +18,7 @@ const CAPTIONS = {
     "No Memory": "Without memory, the grabbing and placing actions alias each other and the policy never even begins the wiping motion.",
     "Text Only": "With only text memory, the policy wipes in random locations and never completes a full wiping motion — language can't encode exactly where the bottle used to sit.",
     "Keyframe Only": "Keyframe memory gives the policy spatial awareness, completing the correct wipe roughly 47% of the time, but it still gets stuck in repeated wipe loops and often forgets to place the sponge back.",
-    "UniMem (Ours)": "Combining keyframes with textual memory overcomes both failure modes, wiping the bottle's exact spot 80% of the time while missing by no more than 10cm.",
+    "UniMem (Ours)": "Combining keyframes with textual memory overcomes both failure modes, wiping the bottle's exact spot 80% of the time while missing by no more than 10cm. Place your finger on the screen to see exactly how close the wipe is to the original bottle location.",
   },
   TapScoopPour: {
     "MemER": "MemER pours into the correct cup only 7% of the time — essentially picking at random among eight cups, since its augmented command vocabulary still can't disambiguate that many options.",
@@ -37,12 +37,12 @@ const CAPTIONS = {
   UpDown3Times: {
     "π0.5 + V.E.": "Sampling frames at a fixed 6-second interval provides an unreliable count of how many cycles have occurred, and performance collapses to 16%.",
     "No Memory": "Without memory the policy has no way to count repetitions and stops after an arbitrary number of cycles.",
-    "Text Only": "A compact textual counter (“picked up: 1, 2, 3”) tracks repetitions reliably, reaching 93% mean subtask success.",
+    "Text Only": "A compact textual memory tracks repetitions reliably, reaching 93% mean subtask success.",
     "Keyframe Only": "Keyframe memory alone fails here (23%) — three past milestones isn't enough temporal reach to disambiguate which repetition the robot is on.",
     "UniMem (Ours)": "Combining text's compact counting with keyframes' visual grounding reaches 96% mean subtask success.",
   },
   OccludedTap: {
-    "π0.5 + V.E.": "Sampled frames retain enough visual history to recall which bin the box went into, performing nearly as well as the full model.",
+    "π0.5 + V.E.": "Sampled frames retain enough visual history to recall which bin the box went into, performing as well as the full model.",
     "No Memory": "Without memory, the policy has to guess which bin holds the box after it's no longer visible, succeeding close to chance plus partial cues.",
     "Text Only": "Text memory alone does reasonably well, but language struggles to fully disambiguate which of several near-identical bins holds the box.",
     "Keyframe Only": "Visual memory resolves this occlusion task perfectly — the keyframe captured before the box disappeared directly encodes which bin it's in.",
@@ -57,10 +57,10 @@ const CAPTIONS = {
   },
   PlateRecall: {
     "π0.5 + V.E.": "Sampled frames retain enough visual history to identify the correct plate, matching the full model.",
-    "No Memory": "Without memory, the policy has no way to recall which of 4 plates originally held the box, performing near the 1-in-4 chance level.",
-    "Text Only": "Text-only memory is little better than chance (20%) — language alone doesn't cleanly encode which of four visually similar plates was the source.",
-    "Keyframe Only": "Keyframe memory alone matches the full model (96%), showing visual memory cleanly resolves this discrete spatial question once task progress is easy to infer.",
-    "UniMem (Ours)": "UniMem matches the ceiling set by keyframe memory alone, correctly recalling the source plate 96% of the time.",
+    "No Memory": "Without memory, the policy has no way to recall which of 4 plates originally held the box and frequently loses track of task progress.",
+    "Text Only": "Text-only memory, as expected, roughly matches the 1-in-4 chance of correct plate selection. Language alone cannot encode which of four visually similar plates was the source.",
+    "Keyframe Only": "Keyframe memory alone matches the full model (96%), showing visual memory cleanly resolves this discrete spatial ambiguity once task progress is easy to infer.",
+    "UniMem (Ours)": "UniMem matches the ceiling set by keyframe memory alone, correctly tapping the source plate 96% of the time.",
   },
 };
 
