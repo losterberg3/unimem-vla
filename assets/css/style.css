@@ -230,7 +230,7 @@ h3.sub-title + figure { margin-top: -12px; }
   width: 100%;
   height: 100%;
 }
-.diagram-svg-host svg {
+.diagram-svg-host > svg {
   display: block;
   width: 100%;
   height: 100%;
