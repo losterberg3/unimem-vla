@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const videoSlot = document.getElementById("diagram-video-slot");
   if (!host || !stage) return;
 
-  fetch("assets/img/model_overview_interactive.svg?v=18")
+  fetch("assets/img/model_final.svg?v=1")
     .then((r) => r.text())
     .then((raw) => {
       const cleaned = raw
@@ -22,410 +22,140 @@ document.addEventListener("DOMContentLoaded", () => {
     const svg = host.querySelector("svg");
     if (!svg) return;
 
-    const byId = (id) => host.querySelector("#" + CSS.escape(id));
-    const byRole = (role) =>
-      Array.from(host.querySelectorAll('[data-role="' + role + '"]'));
+    const PREFIX = "6O-t3x135IJxxH9uS56w-";
+    const cell = (n) => host.querySelector('[data-cell-id="' + PREFIX + n + '"]');
 
-    const coreBoxes = [
-      ...byRole("gemma-backbone-box"),
-      ...byRole("action-expert-box"),
-      ...byRole("tokenizer-box"),
-      ...byRole("keyframe-encoder-box"),
-    ];
-    const tokenizerInputText = byRole("tokenizer-input-text");
-    const encoderInputText = byRole("encoder-input-text");
+    const currentFrameCell = cell(23);
+    const eventBoxCell = cell(21);
+    const pouredBeansCell = cell(25);
 
-    const eventClassifierBox = byId("event-classifier-box");
-    const eventClassifierPhoto = byId("event-classifier-photo");
-    const annotation = byRole("event-classifier-annotation");
-    const bracketEl = byId("event-classifier-bracket");
-    const flowArrow = byId("it-flow-arrow");
-    const fphiArrowEl = byId("fphi-arrow");
-    const fphiArrow = fphiArrowEl ? [fphiArrowEl] : [];
-    const hcacheCylinder = byRole("hcache-cylinder");
-    const slot1 = byId("hcache-slot-1");
-    const slot2 = byId("hcache-slot-2");
-    const slot3 = byId("hcache-slot-3");
-    const ztLabel = byRole("ztlabel-connector");
-    const currentImageBox = byRole("current-image-box");
-    const actionExpertToVideoArrow = byId("action-expert-to-video-arrow");
-    const flowMatchingArrow = byId("flow-matching-arrow");
-    const outerDashedBoxes = byRole("outer-dashed-box");
-    const nullEventEl = byId("null-event-text");
-    const giantNText = byRole("giant-n-text");
-    const tokenizerMemoryText = byId("tokenizer-memory-text");
-    const memoryValueEl = byId("tokenizer-memory-value");
-
-    // the faint dashed boxes wrapping H_cache and the encoder/tokenizer -
-    // removed entirely, for the whole time
-    outerDashedBoxes.forEach((el) => {
-      el.style.opacity = "0";
-    });
-
-    // idle indicator: hidden until the video starts, then pulses
-    // continuously except when the annotation photo is flashing in its place
-    if (nullEventEl) {
-      nullEventEl.style.transition = "opacity 0.4s ease";
-      nullEventEl.style.opacity = "0";
-    }
-
-    // baked-in photos the video now covers - never shown
-    currentImageBox.forEach((el) => {
-      el.style.opacity = "0";
-    });
-
-    const slotPositions = [slot1, slot2, slot3].filter(Boolean);
-
-    let SLOT_SPACING = 63;
-    if (slot1 && slot2 && slot1.getBBox && slot2.getBBox) {
-      try {
-        const b1 = slot1.getBBox();
-        const b2 = slot2.getBBox();
-        const measured = Math.abs(b2.x - b1.x);
-        if (measured > 5) SLOT_SPACING = measured;
-      } catch (e) {
-        /* fall back to default spacing */
-      }
-    }
-
-    const getImageEl = (el) =>
-      !el ? null : el.matches("image") ? el : el.querySelector("image");
-
-    // capture the three keyframe photos already baked into the artwork
-    const bakedHref = (el) => {
-      const img = getImageEl(el);
-      if (!img) return null;
-      return img.getAttribute("xlink:href") || img.getAttribute("href");
-    };
-    const HUMAN_TAP_HREF = bakedHref(slot1);
-    const GRABBED_SPOON_HREF = bakedHref(slot2);
-    const SCOOPED_BEANS_HREF = bakedHref(slot3);
-    // the original annotation photo (before fireEvent starts overwriting it
-    // per-event) is actually the color-edited "poured beans" photo - reuse
-    // it rather than a separately-copied, uncorrected file
-    const POURED_BEANS_HREF =
-      bakedHref(eventClassifierPhoto) || "assets/img/poured_beans_keyframe.png";
-
-    const annotationGroup = [
-      ...annotation,
-      ...(flowArrow ? [flowArrow] : []),
+    // three memory "rows": the cached keyframe photo + its t_i chip on the
+    // left, and the text-memory phrase + its t_i chip on the right - all
+    // four pieces of a row reveal together when that row's event fires
+    const rows = [
+      [cell(9), cell(32), cell(13), cell(19)],
+      [cell(10), cell(33), cell(14), cell(30)],
+      [cell(11), cell(34), cell(15), cell(31)],
     ];
 
-    // Gemma Backbone, Action Expert, Tokenizer, Keyframe Encoder, f_phi,
-    // the arrow into f_phi, z_t, and the flow-matching loop arrow around
-    // Action Expert are left untouched here - visible immediately with no
-    // fade and never hidden, unlike everything below. The flow-matching
-    // arrow is stationary until the video starts, then animates forever.
-
-    // everything else starts hidden; only the video gets a timed fade-in,
-    // the rest is revealed later by actual events - which are keyed to the
-    // video's own currentTime, so the video must stay paused at 0 until it
-    // is actually visible, or those events fire while it's invisible
-    if (video) {
-      video.pause();
-      video.currentTime = 0;
+    function hideInstant(el) {
+      if (!el) return;
+      el.style.transition = "none";
+      el.style.opacity = "0";
     }
+
+    function hideRowInstant(row) {
+      row.forEach((el) => {
+        if (!el) return;
+        el.style.transition = "none";
+        el.style.opacity = "0";
+        el.style.transform = "translateY(6px)";
+      });
+    }
+
+    function revealRow(row) {
+      row.forEach((el) => {
+        if (!el) return;
+        el.style.transition = "transform 0.5s ease, opacity 0.5s ease";
+        el.style.opacity = "1";
+        el.style.transform = "translateY(0)";
+      });
+    }
+
+    // the baked-in current-frame photo is entirely replaced by the live
+    // video overlay positioned on top of it, in CSS
+    hideInstant(currentFrameCell);
+    hideInstant(eventBoxCell);
+    hideInstant(pouredBeansCell);
+    rows.forEach(hideRowInstant);
+
     if (videoSlot) {
       videoSlot.style.transition = "none";
-      videoSlot.style.opacity = "0";
-    }
-    if (actionExpertToVideoArrow) {
-      actionExpertToVideoArrow.style.opacity = "0";
-    }
-    if (bracketEl) {
-      bracketEl.style.opacity = "0";
-    }
-    encoderInputText.forEach((el) => {
-      el.style.opacity = "0";
-    });
-    tokenizerInputText.forEach((el) => {
-      el.style.opacity = "0";
-    });
-    giantNText.forEach((el) => {
-      el.style.opacity = "0";
-    });
-    if (tokenizerMemoryText) {
-      tokenizerMemoryText.style.opacity = "0";
-    }
-    annotationGroup.forEach((el) => {
-      el.style.transition = "opacity 0.4s ease";
-      el.style.opacity = "0";
-    });
-    slotPositions.forEach((el) => {
-      el.style.transition = "transform 0.45s ease, opacity 0.45s ease";
-      el.style.opacity = "0";
-    });
-    hcacheCylinder.forEach((el) => {
-      el.style.transition = "none";
-      el.style.opacity = "0.22";
-    });
-
-    // squish animation for the action-expert-to-video arrow: base fixed,
-    // tip dips down and springs back, looping for the rest of the video
-    if (actionExpertToVideoArrow && actionExpertToVideoArrow.getBBox) {
-      try {
-        const b = actionExpertToVideoArrow.getBBox();
-        actionExpertToVideoArrow.style.transformOrigin =
-          b.x + b.width / 2 + "px " + (b.y + b.height) + "px";
-      } catch (e) {
-        /* skip transform-origin if bbox unavailable */
-      }
+      videoSlot.style.borderColor = "#000";
+      videoSlot.style.animation = "none";
     }
 
-    function playIntro() {
+    function flashBorderRed() {
+      if (!videoSlot) return;
+      videoSlot.style.animation = "none";
+      void videoSlot.offsetWidth;
+      videoSlot.style.animation = "unimem-border-flash 0.18s ease-in-out 5";
       setTimeout(() => {
-        if (videoSlot) {
-          videoSlot.style.transition = "opacity 2s ease";
-          videoSlot.style.opacity = "1";
-        }
-        hcacheCylinder.forEach((el) => {
-          el.style.transition = "opacity 2s ease";
-          el.style.opacity = "1";
-        });
-        encoderInputText.forEach((el) => {
-          el.style.transition = "opacity 2s ease";
-          el.style.opacity = "1";
-        });
-        tokenizerInputText.forEach((el) => {
-          el.style.transition = "opacity 2s ease";
-          el.style.opacity = "1";
-        });
-        giantNText.forEach((el) => {
-          el.style.transition = "opacity 2s ease";
-          el.style.opacity = "1";
-        });
-        if (tokenizerMemoryText) {
-          tokenizerMemoryText.style.transition = "opacity 2s ease";
-          tokenizerMemoryText.style.opacity = "1";
-        }
-      }, 4000);
-      setTimeout(() => {
-        if (video) {
-          video.currentTime = 0;
-          video.play();
-        }
-        if (actionExpertToVideoArrow) {
-          actionExpertToVideoArrow.style.transition = "opacity 0.4s ease";
-          actionExpertToVideoArrow.style.opacity = "1";
-          actionExpertToVideoArrow.style.animation =
-            "unimem-squish 1.2s ease-in-out infinite";
-        }
-        if (bracketEl) {
-          bracketEl.style.transition = "opacity 0.4s ease";
-          bracketEl.style.opacity = "1";
-        }
-        if (flowMatchingArrow) {
-          flowMatchingArrow.style.animation = "unimem-flow-dash 0.5s linear infinite";
-        }
-        if (nullEventEl) {
-          nullEventEl.style.opacity = "1";
-          nullEventEl.style.animation = "unimem-null-pulse 1.6s ease-in-out infinite";
-        }
-      }, 6000);
+        videoSlot.style.animation = "none";
+        videoSlot.style.borderColor = "#000";
+      }, 950);
     }
 
-    const EVENTS = [
-      { t: 1.72, label: "human tap", href: HUMAN_TAP_HREF },
-      { t: 4.86, label: "grabbed spoon", href: GRABBED_SPOON_HREF },
-      { t: 7.99, label: "scooped beans", href: SCOOPED_BEANS_HREF },
-      { t: 13.19, label: "poured beans", href: POURED_BEANS_HREF },
-    ];
-
-    let fired = 0;
-    let history = [];
-    let queue = [];
-
-    function setMemory(text) {
-      if (memoryValueEl) memoryValueEl.textContent = text;
-    }
-
-    function renderQueue(withAnimation) {
-      const padded = [null, null, null];
-      for (let i = 0; i < queue.length; i++) {
-        padded[3 - queue.length + i] = queue[i];
-      }
-
-      if (!withAnimation) {
-        slotPositions.forEach((el, i) => {
-          const entry = padded[i];
-          const img = getImageEl(el);
-          el.style.transition = "none";
-          el.style.transform = "translateX(0)";
-          if (entry && img) {
-            img.setAttribute("xlink:href", entry);
-            img.setAttribute("href", entry);
-          }
-          el.style.opacity = entry ? "1" : "0";
-        });
-        return;
-      }
-
-      slotPositions.forEach((el) => {
-        el.style.transition = "transform 0.4s ease";
-        el.style.transform = "translateX(-" + SLOT_SPACING + "px)";
-      });
-
-      setTimeout(() => {
-        slotPositions.forEach((el, i) => {
-          const entry = padded[i];
-          const img = getImageEl(el);
-          el.style.transition = "none";
-          if (entry && img) {
-            img.setAttribute("xlink:href", entry);
-            img.setAttribute("href", entry);
-          }
-          if (entry) {
-            el.style.opacity = "1";
-            el.style.transform =
-              i === 2 ? "translateX(" + SLOT_SPACING + "px)" : "translateX(0)";
-          } else {
-            el.style.opacity = "0";
-            el.style.transform = "translateX(0)";
-          }
-        });
-        void stage.getBoundingClientRect();
-        requestAnimationFrame(() => {
-          slotPositions.forEach((el) => {
-            el.style.transition = "transform 0.4s ease";
-            el.style.transform = "translateX(0)";
-          });
-        });
-      }, 400);
-    }
-
-    function blinkAnnotationThenHide(onFullyHidden) {
-      if (annotationGroup.length === 0) return;
-      annotationGroup.forEach((el) => (el.style.transition = "opacity 0.15s ease"));
+    function blinkThenHide(el) {
+      if (!el) return;
+      el.style.transition = "opacity 0.15s ease";
       let n = 0;
       const blink = setInterval(() => {
-        const on = n % 2 === 0;
-        annotationGroup.forEach((el) => (el.style.opacity = on ? "1" : "0.15"));
+        el.style.opacity = n % 2 === 0 ? "1" : "0.15";
         n++;
-        if (n >= 5) {
+        if (n >= 6) {
           clearInterval(blink);
-          annotationGroup.forEach((el) => (el.style.opacity = "1"));
+          el.style.opacity = "1";
           setTimeout(() => {
-            annotationGroup.forEach((el) => {
-              el.style.transition = "opacity 0.5s ease";
-              el.style.opacity = "0";
-            });
-            setTimeout(() => {
-              if (onFullyHidden) onFullyHidden();
-            }, 500);
-          }, 900);
+            el.style.transition = "opacity 0.5s ease";
+            el.style.opacity = "0";
+          }, 700);
         }
-      }, 180);
+      }, 150);
     }
 
-    function flowArrowFor(ms) {
-      if (!flowArrow) return;
-      flowArrow.style.animation = "unimem-flow-dash 0.5s linear infinite";
-      setTimeout(() => {
-        flowArrow.style.animation = "none";
-      }, ms);
-    }
+    const EVENTS = [1.72, 4.86, 7.99, 13.19];
+    const RESUME_DELAY = 1700;
 
-    function resetDiagram() {
-      fired = 0;
-      history = [];
-      queue = [];
-      setMemory("none");
-      if (video) {
-        video.pause();
-        video.currentTime = 0;
-      }
-      if (videoSlot) {
-        videoSlot.style.transition = "none";
-        videoSlot.style.opacity = "0";
-      }
-      if (actionExpertToVideoArrow) {
-        actionExpertToVideoArrow.style.transition = "none";
-        actionExpertToVideoArrow.style.opacity = "0";
-        actionExpertToVideoArrow.style.animation = "none";
-      }
-      if (bracketEl) {
-        bracketEl.style.transition = "none";
-        bracketEl.style.opacity = "0";
-      }
-      encoderInputText.forEach((el) => {
-        el.style.transition = "none";
-        el.style.opacity = "0";
-      });
-      tokenizerInputText.forEach((el) => {
-        el.style.transition = "none";
-        el.style.opacity = "0";
-      });
-      giantNText.forEach((el) => {
-        el.style.transition = "none";
-        el.style.opacity = "0";
-      });
-      if (tokenizerMemoryText) {
-        tokenizerMemoryText.style.transition = "none";
-        tokenizerMemoryText.style.opacity = "0";
-      }
-      if (flowMatchingArrow) flowMatchingArrow.style.animation = "none";
-      annotationGroup.forEach((el) => (el.style.opacity = "0"));
-      if (nullEventEl) {
-        nullEventEl.style.transition = "none";
-        nullEventEl.style.opacity = "0";
-        nullEventEl.style.animation = "none";
-      }
-      renderQueue(false);
-      hcacheCylinder.forEach((el) => {
-        el.style.transition = "none";
-        el.style.opacity = "0.22";
-      });
-      playIntro();
-    }
+    let fired = 0;
 
-    function fireEvent(ev) {
+    function fireEvent(i) {
       if (video) video.pause();
 
-      history.push(ev.label);
-      setMemory(history.join(", "));
+      flashBorderRed();
+      blinkThenHide(eventBoxCell);
 
-      if (ev.href) {
-        const photoImg = getImageEl(eventClassifierPhoto);
-        if (photoImg) {
-          photoImg.setAttribute("xlink:href", ev.href);
-          photoImg.setAttribute("href", ev.href);
-        }
+      if (i < rows.length) {
+        revealRow(rows[i]);
+      } else if (pouredBeansCell) {
+        pouredBeansCell.style.transition = "transform 0.5s ease, opacity 0.5s ease";
+        pouredBeansCell.style.opacity = "1";
+        pouredBeansCell.style.transform = "translateY(0)";
       }
-
-      if (nullEventEl) {
-        nullEventEl.style.animation = "none";
-        nullEventEl.style.opacity = "0";
-      }
-      blinkAnnotationThenHide(() => {
-        if (nullEventEl) {
-          nullEventEl.style.opacity = "1";
-          nullEventEl.style.animation = "unimem-null-pulse 1.6s ease-in-out infinite";
-        }
-      });
-      flowArrowFor(3000);
-
-      queue.push(ev.href);
-      if (queue.length > 3) queue.shift();
-      renderQueue(true);
 
       if (video) {
         setTimeout(() => {
           video.play();
-        }, 3000);
+        }, RESUME_DELAY);
       }
     }
 
-    playIntro();
+    function resetDiagram() {
+      fired = 0;
+      rows.forEach(hideRowInstant);
+      hideInstant(pouredBeansCell);
+      hideInstant(eventBoxCell);
+      if (videoSlot) {
+        videoSlot.style.animation = "none";
+        videoSlot.style.borderColor = "#000";
+      }
+    }
 
     if (video) {
+      video.pause();
+      video.currentTime = 0;
       video.addEventListener("timeupdate", () => {
         const t = video.currentTime;
         if (t < 0.5 && fired > 0) resetDiagram();
-        if (fired < EVENTS.length && t >= EVENTS[fired].t) {
-          fireEvent(EVENTS[fired]);
+        if (fired < EVENTS.length && t >= EVENTS[fired]) {
+          fireEvent(fired);
           fired++;
         }
       });
+      setTimeout(() => {
+        video.currentTime = 0;
+        video.play();
+      }, 600);
     }
   }
 });

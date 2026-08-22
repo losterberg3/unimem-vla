@@ -221,9 +221,9 @@ h3.sub-title + figure { margin-top: -12px; }
 .diagram-stage {
   position: relative;
   width: 100%;
-  max-width: 669.9px;
+  max-width: 564px;
   height: auto;
-  aspect-ratio: 234 / 265.47;
+  aspect-ratio: 176 / 237;
   margin: 0 auto;
 }
 .diagram-svg-host {
@@ -239,15 +239,15 @@ h3.sub-title + figure { margin-top: -12px; }
 }
 .diagram-video-slot {
   position: absolute;
-  left: 36.75%;
-  top: 2.22%;
-  width: 60.38%;
-  height: 38.42%;
-  border-radius: 10px;
+  left: 4.86%;
+  top: 57.36%;
+  width: 29.92%;
+  height: 16.03%;
+  border-radius: 6px;
+  border: 2px solid #000;
   overflow: hidden;
   background: #14181c;
   box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-  opacity: 0;
 }
 .diagram-video-slot video {
   width: 100%;
@@ -255,18 +255,9 @@ h3.sub-title + figure { margin-top: -12px; }
   object-fit: cover;
   display: block;
 }
-@keyframes unimem-null-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
-}
-
-@keyframes unimem-flow-dash {
-  to { stroke-dashoffset: -18; }
-}
-
-@keyframes unimem-squish {
-  0%, 100% { transform: scaleY(1); }
-  50% { transform: scaleY(0.7); }
+@keyframes unimem-border-flash {
+  0%, 100% { border-color: #000; }
+  50% { border-color: #cc0000; }
 }
 
 .figure-wide {
