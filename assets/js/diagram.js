@@ -16,11 +16,27 @@ document.addEventListener("DOMContentLoaded", () => {
         // a dark OS/browser preference, inverting the diagram's colors
         .replace(/color-scheme:\s*light dark/g, "color-scheme: light");
       host.innerHTML = cleaned;
+      stripMathJaxRendering();
       initDiagram();
     })
     .catch(() => {
       host.innerHTML = "";
     });
+
+  // every LaTeX label (t_1/t_2/t_3/t_4 chips, f_phi) is exported as a
+  // <switch> offering a live MathJax-rendered nested <svg> inside a
+  // foreignObject, falling back to a flat raster <image> only if
+  // foreignObject support is absent - which no real browser triggers, so
+  // every browser picks the MathJax branch. That nested svg-in-
+  // foreignObject-in-svg rendering is unreliable on mobile Safari (wrong
+  // position, wrong size), so drop the foreignObject entirely and force
+  // every browser onto the already-baked, pixel-identical raster fallback
+  function stripMathJaxRendering() {
+    host.querySelectorAll("switch").forEach((sw) => {
+      const fo = sw.querySelector("foreignObject");
+      if (fo && fo.querySelector("svg")) fo.remove();
+    });
+  }
 
   function initDiagram() {
     const svg = host.querySelector("svg");
