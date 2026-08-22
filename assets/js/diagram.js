@@ -56,20 +56,39 @@ document.addEventListener("DOMContentLoaded", () => {
       host.querySelector('[data-cell-id="qqDF_xJRQ1dh1Ij_D3h7-4"]'),
     ];
 
+    // each arrow cell is [line path, filled arrowhead triangle] - only the
+    // arrowhead should bounce, and only along the direction it points
+    function arrowTip(cellEl) {
+      if (!cellEl) return null;
+      const paths = cellEl.querySelectorAll("path");
+      return paths.length > 1 ? paths[1] : null;
+    }
+
+    const TIP_ANIMATIONS = {
+      right: "unimem-tip-bounce-right 1s ease-in-out infinite",
+      left: "unimem-tip-bounce-left 1s ease-in-out infinite",
+      up: "unimem-tip-bounce-up 1s ease-in-out infinite",
+    };
+
     // the two red loop arrows (into the keyframe encoder / tokenizer) bounce
     // continuously; the two black arrows (up into UniMem / text memory)
     // only bounce while an event is being processed
-    const redArrows = [cell(20), cell(29)];
-    const blackArrows = [cell(22), cell(24)];
-    const BOUNCE_ANIMATION = "unimem-arrow-bounce 1s ease-in-out infinite";
+    const redArrowTips = [
+      { el: arrowTip(cell(20)), dir: "right" },
+      { el: arrowTip(cell(29)), dir: "left" },
+    ];
+    const blackArrowTips = [
+      { el: arrowTip(cell(22)), dir: "up" },
+      { el: arrowTip(cell(24)), dir: "up" },
+    ];
 
-    redArrows.forEach((el) => {
-      if (el) el.style.animation = BOUNCE_ANIMATION;
+    redArrowTips.forEach(({ el, dir }) => {
+      if (el) el.style.animation = TIP_ANIMATIONS[dir];
     });
 
     function setBlackArrowsBouncing(bouncing) {
-      blackArrows.forEach((el) => {
-        if (el) el.style.animation = bouncing ? BOUNCE_ANIMATION : "none";
+      blackArrowTips.forEach(({ el, dir }) => {
+        if (el) el.style.animation = bouncing ? TIP_ANIMATIONS[dir] : "none";
       });
     }
 

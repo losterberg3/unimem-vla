@@ -259,7 +259,15 @@ h3.sub-title + figure { margin-top: -12px; }
   0%, 100% { border-color: #000; }
   50% { border-color: #cc0000; }
 }
-@keyframes unimem-arrow-bounce {
+@keyframes unimem-tip-bounce-right {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(2px); }
+}
+@keyframes unimem-tip-bounce-left {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-2px); }
+}
+@keyframes unimem-tip-bounce-up {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-2px); }
 }
