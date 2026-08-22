@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const videoSlot = document.getElementById("diagram-video-slot");
   if (!host || !stage) return;
 
-  fetch("assets/img/model_final.svg?v=1")
+  fetch("assets/img/model_final.svg?v=2")
     .then((r) => r.text())
     .then((raw) => {
       const cleaned = raw
@@ -47,72 +47,14 @@ document.addEventListener("DOMContentLoaded", () => {
       [cell(11), cell(34), cell(15), cell(31)],
     ];
 
-    // the text-memory list has no eviction limit - it grows as new events
-    // come in, so the 4th+ event appends a new row below "scooped beans"
-    // by cloning the last baked phrase/chip pair rather than reusing a
-    // fixed slot
-    const memoryPhraseTemplate = cell(15);
-    const memoryChipTemplate = cell(31);
-    // tighter than the 17.5 spacing between the baked rows - the UniMem
-    // box sits immediately below row 3, so a 4th row needs to slot into
-    // the narrow gap above it rather than reuse the baked rhythm
-    const MEMORY_ROW_SPACING = 9;
-    let memoryRowCount = rows.length;
-    let appendedMemoryRows = [];
-
-    function appendMemoryRow(text) {
-      if (!memoryPhraseTemplate || !memoryChipTemplate) return;
-      const dy = MEMORY_ROW_SPACING * (memoryRowCount - (rows.length - 1));
-      const n = memoryRowCount + 1;
-
-      const phraseClone = memoryPhraseTemplate.cloneNode(true);
-      phraseClone.removeAttribute("data-cell-id");
-      const span = phraseClone.querySelector("span");
-      if (span) span.textContent = text;
-
-      // reuse the chip's own (correctly-namespaced) positioning <div> rather
-      // than injecting a new foreignObject/div via innerHTML - assigning
-      // innerHTML with nested xmlns="..." markup onto an SVG-namespaced
-      // parent doesn't reliably create real SVG/XHTML nodes, which silently
-      // breaks the flex+padding centering hack and dumps the text at the
-      // canvas origin instead of its slot
-      const chipClone = memoryChipTemplate.cloneNode(true);
-      chipClone.removeAttribute("data-cell-id");
-      const chipPositionDiv = chipClone.querySelector("foreignObject > div");
-      if (chipPositionDiv) {
-        chipPositionDiv.innerHTML =
-          '<div style="box-sizing: border-box; font-size: 0; text-align: center; color: #000000;">' +
-          '<span style="font-style: italic; font-family: Georgia, serif; font-size: 6px;">t<sub style="font-size: 4px;">' +
-          n +
-          "</sub></span></div>";
-      }
-
-      memoryPhraseTemplate.parentNode.insertBefore(phraseClone, memoryPhraseTemplate.nextSibling);
-      memoryChipTemplate.parentNode.insertBefore(chipClone, memoryChipTemplate.nextSibling);
-
-      [phraseClone, chipClone].forEach((el) => {
-        el.style.transition = "none";
-        el.style.opacity = "0";
-        el.style.transform = "translateY(" + (dy + 6) + "px)";
-      });
-      void stage.getBoundingClientRect();
-      requestAnimationFrame(() => {
-        [phraseClone, chipClone].forEach((el) => {
-          el.style.transition = "transform 0.5s ease, opacity 0.5s ease";
-          el.style.opacity = "1";
-          el.style.transform = "translateY(" + dy + "px)";
-        });
-      });
-
-      memoryRowCount++;
-      appendedMemoryRows.push(phraseClone, chipClone);
-    }
-
-    function clearAppendedMemoryRows() {
-      appendedMemoryRows.forEach((el) => el.remove());
-      appendedMemoryRows = [];
-      memoryRowCount = rows.length;
-    }
+    // the text-memory list's 4th row (poured beans) is baked into the
+    // artwork under a different cell-id prefix (shares one with the UniMem
+    // box) - the cache has no matching 4th photo slot, so this row is only
+    // ever revealed on its own, not paired with a cache photo
+    const pouredBeansMemoryRow = [
+      host.querySelector('[data-cell-id="qqDF_xJRQ1dh1Ij_D3h7-3"]'),
+      host.querySelector('[data-cell-id="qqDF_xJRQ1dh1Ij_D3h7-4"]'),
+    ];
 
     // the cache column only has 3 baked photo slots (t1-t3), so the 4th
     // event ("poured beans" - no baked slot of its own) evicts the oldest
@@ -195,6 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
     hideInstant(eventBoxCell);
     hideInstant(annotationCell);
     rows.forEach(hideRowInstant);
+    hideRowInstant(pouredBeansMemoryRow);
 
     if (videoSlot) {
       videoSlot.style.transition = "none";
@@ -263,7 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
           revealRow(rows[i]);
         } else {
           evictAndSlideCache();
-          appendMemoryRow(EVENTS[i].label);
+          revealRow(pouredBeansMemoryRow);
         }
         if (video) video.play();
       });
@@ -272,7 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function resetDiagram() {
       fired = 0;
       rows.forEach(hideRowInstant);
-      clearAppendedMemoryRows();
+      hideRowInstant(pouredBeansMemoryRow);
       hideInstant(annotationCell);
       hideInstant(eventBoxCell);
       setCacheHrefs(ORIGINAL_CACHE_HREFS);
