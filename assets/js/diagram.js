@@ -56,6 +56,23 @@ document.addEventListener("DOMContentLoaded", () => {
       host.querySelector('[data-cell-id="qqDF_xJRQ1dh1Ij_D3h7-4"]'),
     ];
 
+    // the two red loop arrows (into the keyframe encoder / tokenizer) bounce
+    // continuously; the two black arrows (up into UniMem / text memory)
+    // only bounce while an event is being processed
+    const redArrows = [cell(20), cell(29)];
+    const blackArrows = [cell(22), cell(24)];
+    const BOUNCE_ANIMATION = "unimem-arrow-bounce 1s ease-in-out infinite";
+
+    redArrows.forEach((el) => {
+      if (el) el.style.animation = BOUNCE_ANIMATION;
+    });
+
+    function setBlackArrowsBouncing(bouncing) {
+      blackArrows.forEach((el) => {
+        if (el) el.style.animation = bouncing ? BOUNCE_ANIMATION : "none";
+      });
+    }
+
     // the cache column only has 3 baked photo slots (t1-t3), so the 4th
     // event ("poured beans" - no baked slot of its own) evicts the oldest
     // photo and slides the other two up, sliding the new photo in at the
@@ -194,6 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       flashBorderRed();
       blinkThenHide(eventBoxCell);
+      setBlackArrowsBouncing(true);
 
       if (annotationSpan) annotationSpan.textContent = EVENTS[i].label;
       if (annotationCell) {
@@ -208,6 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
           evictAndSlideCache();
           revealRow(pouredBeansMemoryRow);
         }
+        setBlackArrowsBouncing(false);
         if (video) video.play();
       });
     }
@@ -219,6 +238,7 @@ document.addEventListener("DOMContentLoaded", () => {
       hideInstant(annotationCell);
       hideInstant(eventBoxCell);
       setCacheHrefs(ORIGINAL_CACHE_HREFS);
+      setBlackArrowsBouncing(false);
       if (videoSlot) {
         videoSlot.style.animation = "none";
         videoSlot.style.borderColor = "#000";

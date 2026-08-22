@@ -259,6 +259,10 @@ h3.sub-title + figure { margin-top: -12px; }
   0%, 100% { border-color: #000; }
   50% { border-color: #cc0000; }
 }
+@keyframes unimem-arrow-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
 
 .figure-wide {
   width: 70vw;
