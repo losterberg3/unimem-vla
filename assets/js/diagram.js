@@ -10,7 +10,11 @@ document.addEventListener("DOMContentLoaded", () => {
     .then((raw) => {
       const cleaned = raw
         .replace(/<\?xml[^>]*\?>/, "")
-        .replace(/<!DOCTYPE[^>]*>/, "");
+        .replace(/<!DOCTYPE[^>]*>/, "")
+        // force the light palette - otherwise every light-dark(...) fill/
+        // stroke in the artwork flips to its dark variant on systems with
+        // a dark OS/browser preference, inverting the diagram's colors
+        .replace(/color-scheme:\s*light dark/g, "color-scheme: light");
       host.innerHTML = cleaned;
       initDiagram();
     })
