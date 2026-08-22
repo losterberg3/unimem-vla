@@ -38,13 +38,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const annotationCell = cell(25);
     const annotationSpan = annotationCell ? annotationCell.querySelector("span") : null;
 
-    // three memory "rows": the cached keyframe photo + its t_i chip on the
-    // left, and the text-memory phrase + its t_i chip on the right - all
-    // four pieces of a row reveal together when that row's event fires
+    // three memory "rows": the t_i chip and phrase on the text-memory side -
+    // the cached keyframe photo for the same event is handled separately
+    // (see cachePhotoCells below) since it needs different treatment
     const rows = [
-      [cell(9), cell(32), cell(13), cell(19)],
-      [cell(10), cell(33), cell(14), cell(30)],
-      [cell(11), cell(34), cell(15), cell(31)],
+      [cell(32), cell(13), cell(19)],
+      [cell(33), cell(14), cell(30)],
+      [cell(34), cell(15), cell(31)],
     ];
 
     // the text-memory list's 4th row (poured beans) is baked into the
@@ -64,11 +64,15 @@ document.addEventListener("DOMContentLoaded", () => {
       return paths.length > 1 ? paths[1] : null;
     }
 
-    const TIP_ANIMATIONS = {
-      right: "unimem-tip-bounce-right 1s ease-in-out infinite",
-      left: "unimem-tip-bounce-left 1s ease-in-out infinite",
-      up: "unimem-tip-bounce-up 1s ease-in-out infinite",
+    // scaling from the edge where the tip meets its line (rather than
+    // translating the tip away from it) grows/shrinks the point in place
+    // without ever visually detaching it from the line
+    const TIP_ORIGINS = {
+      right: "0% 50%",
+      left: "100% 50%",
+      up: "50% 100%",
     };
+    const TIP_ANIMATION = "unimem-tip-pulse 1s ease-in-out infinite";
 
     // the two red loop arrows (into the keyframe encoder / tokenizer) bounce
     // continuously; the two black arrows (up into UniMem / text memory)
@@ -82,13 +86,19 @@ document.addEventListener("DOMContentLoaded", () => {
       { el: arrowTip(cell(24)), dir: "up" },
     ];
 
-    redArrowTips.forEach(({ el, dir }) => {
-      if (el) el.style.animation = TIP_ANIMATIONS[dir];
+    [...redArrowTips, ...blackArrowTips].forEach(({ el, dir }) => {
+      if (!el) return;
+      el.style.transformBox = "fill-box";
+      el.style.transformOrigin = TIP_ORIGINS[dir];
+    });
+
+    redArrowTips.forEach(({ el }) => {
+      if (el) el.style.animation = TIP_ANIMATION;
     });
 
     function setBlackArrowsBouncing(bouncing) {
-      blackArrowTips.forEach(({ el, dir }) => {
-        if (el) el.style.animation = bouncing ? TIP_ANIMATIONS[dir] : "none";
+      blackArrowTips.forEach(({ el }) => {
+        if (el) el.style.animation = bouncing ? TIP_ANIMATION : "none";
       });
     }
 
@@ -149,6 +159,16 @@ document.addEventListener("DOMContentLoaded", () => {
       el.style.opacity = "0";
     }
 
+    // opacity-only fade, deliberately without a transform: the cache photos
+    // carry a clip-path (for their rounded corners), and combining that
+    // with a CSS transform on the element rendered at the wrong position
+    // and size on some mobile browsers
+    function revealOpacityOnly(el) {
+      if (!el) return;
+      el.style.transition = "opacity 0.5s ease";
+      el.style.opacity = "1";
+    }
+
     function hideRowInstant(row) {
       row.forEach((el) => {
         if (!el) return;
@@ -172,6 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
     hideInstant(currentFrameCell);
     hideInstant(eventBoxCell);
     hideInstant(annotationCell);
+    cachePhotoCells.forEach(hideInstant);
     rows.forEach(hideRowInstant);
     hideRowInstant(pouredBeansMemoryRow);
 
@@ -241,6 +262,7 @@ document.addEventListener("DOMContentLoaded", () => {
       blinkThenHide(annotationCell, () => {
         if (i < rows.length) {
           revealRow(rows[i]);
+          revealOpacityOnly(cachePhotoCells[i]);
         } else {
           evictAndSlideCache();
           revealRow(pouredBeansMemoryRow);
@@ -254,6 +276,7 @@ document.addEventListener("DOMContentLoaded", () => {
       fired = 0;
       rows.forEach(hideRowInstant);
       hideRowInstant(pouredBeansMemoryRow);
+      cachePhotoCells.forEach(hideInstant);
       hideInstant(annotationCell);
       hideInstant(eventBoxCell);
       setCacheHrefs(ORIGINAL_CACHE_HREFS);
