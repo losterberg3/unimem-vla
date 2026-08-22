@@ -124,15 +124,11 @@
             </video>
           </div>
         </div>
-        <figcaption><b>Overview of UniMem.</b> (Top) An event classifier ($f_\phi$) detects sparse sub-task
-        transition events ($e_t$) in a task vocabulary set ($\mathcal{E}$) from the backbone's latent ($z_t$),
-        updating both textual memory ($\mathcal{M}_t$) and a keyframe cache ($\mathcal{H}_{\text{cache}}$).
-        (Middle) Our image keyframe encoder conditions on our autoregressively updated $\mathcal{H}_{\text{cache}}$
-        and the current image $I_t$, while textual descriptions of new events are added to $\mathcal{M}_t$ with the
-        task prompt $g$ and proprioception $q_t$. This provides multimodal memory directly to our backbone and
-        action expert. (Bottom) We cache the hidden state of past keyframes in $\mathcal{H}_{\text{cache}}$ at
-        temporal attention layers of our encoder for fast inference and only update their positional embeddings at
-        subsequent timesteps.</figcaption>
+        <figcaption><b>Overview of UniMem.</b> An event classifier ($f_\phi$) detects sparse sub-task
+        transition events from the backbone latent space, autoregressively updating textual memory and a cache
+        of precomputed keyframe hidden states. This routes to our keyframe encoder and a tokenizer, providing
+        event-driven, multimodal memory directly to the backbone and action expert while unifying memory and
+        control in one self-sustaining, low-latency VLA.</figcaption>
       </figure>
 
       <h3 class="sub-title">Event classification &amp; textual memory</h3>
