@@ -108,9 +108,10 @@ document.addEventListener("DOMContentLoaded", () => {
       el.style.transformOrigin = TIP_ORIGINS[dir];
     });
 
-    redArrowTips.forEach(({ el }) => {
-      if (el) el.style.animation = TIP_ANIMATION;
-    });
+    // the whole arrow (line + tip), for the intro reveal - the tips above
+    // are only the sub-element used for the bounce animation
+    const redArrowCells = [cell(20), cell(29)];
+    const blackArrowCells = [cell(22), cell(24)];
 
     function setBlackArrowsBouncing(bouncing) {
       blackArrowTips.forEach(({ el }) => {
@@ -203,6 +204,31 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
+    function revealGroup(group) {
+      group.forEach((el) => {
+        if (!el) return;
+        el.style.transition = "opacity 0.8s ease";
+        el.style.opacity = "1";
+      });
+    }
+
+    // intro reveal, in order: UniMem alone -> the core backbone/action
+    // expert/f_phi/keyframe-encoder/tokenizer path -> the rest of the
+    // architecture plus the (still paused) video -> once the video starts,
+    // the arrows appear
+    const coreArchGroup = [cell(2), cell(17), cell(7), cell(18), cell(4), cell(12), cell(6), cell(16), cell(5)];
+    const fullArchGroup = [
+      cell(35), // Task
+      cell(26), // Text memory header
+      cell(27), // Keyframe memory cache header
+      cell(3), // outer red dashed box
+      cell(8), // keyframe cache cylinder
+      cell(28), // Multimodal memory update
+      cell(1), // outer blue dashed box
+      cell(39), // outer green dashed box
+      cell(42), // Autoregressive Memory Conditioning
+    ];
+
     // the baked-in current-frame photo is entirely replaced by the live
     // video overlay positioned on top of it, in CSS
     hideInstant(currentFrameCell);
@@ -211,9 +237,13 @@ document.addEventListener("DOMContentLoaded", () => {
     cachePhotoCells.forEach(hideInstant);
     rows.forEach(hideRowInstant);
     hideRowInstant(pouredBeansMemoryRow);
+    coreArchGroup.forEach(hideInstant);
+    fullArchGroup.forEach(hideInstant);
+    [...redArrowCells, ...blackArrowCells].forEach(hideInstant);
 
     if (videoSlot) {
       videoSlot.style.transition = "none";
+      videoSlot.style.opacity = "0";
       videoSlot.style.borderColor = "#000";
       videoSlot.style.animation = "none";
     }
@@ -314,10 +344,30 @@ document.addEventListener("DOMContentLoaded", () => {
           fired++;
         }
       });
+
+      // UniMem starts alone; after 4s the core backbone path reveals; 5s
+      // after that the rest of the architecture (and the video, still
+      // paused) reveals; 3s after that the video starts playing and the
+      // arrows appear
       setTimeout(() => {
+        revealGroup(coreArchGroup);
+      }, 4000);
+      setTimeout(() => {
+        revealGroup(fullArchGroup);
+        if (videoSlot) {
+          videoSlot.style.transition = "opacity 0.8s ease";
+          videoSlot.style.opacity = "1";
+        }
+      }, 4000 + 5000);
+      setTimeout(() => {
+        revealGroup(redArrowCells);
+        revealGroup(blackArrowCells);
+        redArrowTips.forEach(({ el }) => {
+          if (el) el.style.animation = TIP_ANIMATION;
+        });
         video.currentTime = 0;
         video.play();
-      }, 600);
+      }, 4000 + 5000 + 3000);
     }
   }
 });
