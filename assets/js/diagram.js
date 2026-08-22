@@ -42,6 +42,57 @@ document.addEventListener("DOMContentLoaded", () => {
       [cell(11), cell(34), cell(15), cell(31)],
     ];
 
+    // the cache column only has 3 baked photo slots (t1-t3), so the 4th
+    // event ("poured beans" - no baked slot of its own) evicts the oldest
+    // photo and slides the other two up, sliding the new photo in at the
+    // bottom - the t1/t2/t3 chips are position labels and stay put
+    const cachePhotoCells = [cell(9), cell(10), cell(11)];
+    const cachePhotoImgs = cachePhotoCells.map((el) => (el ? el.querySelector("image") : null));
+    const ORIGINAL_CACHE_HREFS = cachePhotoImgs.map((img) =>
+      img ? img.getAttribute("xlink:href") || img.getAttribute("href") : null
+    );
+    const POURED_BEANS_HREF = "assets/img/poured_beans_keyframe.png";
+    const CACHE_SLOT_SPACING = 27;
+
+    function setCacheHrefs(hrefs) {
+      cachePhotoImgs.forEach((img, i) => {
+        if (!img || !hrefs[i]) return;
+        img.setAttribute("xlink:href", hrefs[i]);
+        img.setAttribute("href", hrefs[i]);
+      });
+    }
+
+    function evictAndSlideCache() {
+      const currentHrefs = cachePhotoImgs.map(
+        (img) => img && (img.getAttribute("xlink:href") || img.getAttribute("href"))
+      );
+      const nextHrefs = [currentHrefs[1], currentHrefs[2], POURED_BEANS_HREF];
+
+      cachePhotoCells.forEach((el) => {
+        if (!el) return;
+        el.style.transition = "transform 0.4s ease";
+        el.style.transform = "translateY(-" + CACHE_SLOT_SPACING + "px)";
+      });
+
+      setTimeout(() => {
+        setCacheHrefs(nextHrefs);
+        cachePhotoCells.forEach((el, i) => {
+          if (!el) return;
+          el.style.transition = "none";
+          el.style.transform =
+            i === 2 ? "translateY(" + CACHE_SLOT_SPACING + "px)" : "translateY(0)";
+        });
+        void stage.getBoundingClientRect();
+        requestAnimationFrame(() => {
+          cachePhotoCells.forEach((el) => {
+            if (!el) return;
+            el.style.transition = "transform 0.4s ease";
+            el.style.transform = "translateY(0)";
+          });
+        });
+      }, 400);
+    }
+
     function hideInstant(el) {
       if (!el) return;
       el.style.transition = "none";
@@ -121,10 +172,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (i < rows.length) {
         revealRow(rows[i]);
-      } else if (pouredBeansCell) {
-        pouredBeansCell.style.transition = "transform 0.5s ease, opacity 0.5s ease";
-        pouredBeansCell.style.opacity = "1";
-        pouredBeansCell.style.transform = "translateY(0)";
+      } else {
+        evictAndSlideCache();
+        if (pouredBeansCell) {
+          pouredBeansCell.style.transition = "transform 0.5s ease, opacity 0.5s ease";
+          pouredBeansCell.style.opacity = "1";
+          pouredBeansCell.style.transform = "translateY(0)";
+        }
       }
 
       if (video) {
@@ -139,6 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
       rows.forEach(hideRowInstant);
       hideInstant(pouredBeansCell);
       hideInstant(eventBoxCell);
+      setCacheHrefs(ORIGINAL_CACHE_HREFS);
       if (videoSlot) {
         videoSlot.style.animation = "none";
         videoSlot.style.borderColor = "#000";
