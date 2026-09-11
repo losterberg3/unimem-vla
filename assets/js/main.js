@@ -85,9 +85,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (videoAttr) {
           const paths = videoAttr.split(",").map((p) => p.trim()).filter(Boolean);
           slot.classList.add("has-video");
+          const speedBadge = isSim ? "" : ` <span class="vs-speed">5× speed</span>`;
           slot.innerHTML =
-            `<div class="vs-caption">${taskName} — ${condLabel} ` +
-            `<span class="vs-speed">${isSim ? "6×" : "5×"} speed</span></div>` +
+            `<div class="vs-caption">${taskName} — ${condLabel}${speedBadge}</div>` +
             `<div class="vs-videos${paths.length > 1 ? " vs-videos-multi" : ""}">` +
             paths
               .map(
