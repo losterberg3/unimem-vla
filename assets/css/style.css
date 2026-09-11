@@ -437,6 +437,16 @@ td.best { color: var(--cardinal); font-weight: 800; }
   background: var(--paper);
   border-bottom: 1px solid var(--line);
 }
+.video-slot .vs-speed {
+  font-weight: 600;
+  font-size: 0.72rem;
+  color: var(--cardinal);
+  background: var(--cardinal-light);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-left: 4px;
+  white-space: nowrap;
+}
 .video-slot .vs-videos {
   display: flex;
   flex-direction: column;
