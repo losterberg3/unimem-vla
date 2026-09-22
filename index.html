@@ -78,7 +78,7 @@
         memory. That's fine for short, fully-observable tasks, but it breaks down the moment a task requires
         knowing <i>what already happened</i>: state-of-the-art policies still fail at tasks as simple as picking
         something up and putting it back where it was. Two moments in a task can look nearly identical while
-        demanding completely different actions depending on history — a failure mode we call
+        demanding completely different actions depending on history — a failure mode called
         <b>perceptual aliasing</b>. Prior methods either add a second, slower VLM to plan over history (a
         hierarchical, decoupled pipeline) or feed the policy a fixed window of arbitrarily sampled recent frames (which 
         invites spurious correlations and doesn't scale). UniMem instead adds a lightweight event classifier directly on
